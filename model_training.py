@@ -142,12 +142,20 @@ if __name__ == "__main__":
         params.update(num_boost_round=model.best_iteration)
         skl_model = xgb.XGBClassifier(**params)
         skl_model.fit(train[features], train["target"])
+        predictions_example = pd.DataFrame(
+            skl_model.predict_proba(input_example)[:, 1],
+            columns=["predictions"]
+        )
         mlflow.xgboost.log_model(
             skl_model,
             artifact_path="sklearn",
             input_example=input_example,
             registered_model_name=config.model.model_name + "_sklearn",
             model_format=config.model.sklearn_save_format
+        )
+        mlflow.log_text(
+            predictions_example.to_json(orient="split", index=False),
+            artifact_file="sklearn/predictions_example.json"
         )
 
         logger.info("Model training finished")
