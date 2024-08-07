@@ -11,7 +11,7 @@ import optuna
 import pandas as pd
 import xgboost as xgb
 from loguru import logger
-from xgboost.callback import EarlyStopping, TrainingCallback  # noqa
+from xgboost.callback import TrainingCallback
 
 from config.core import config
 
@@ -64,21 +64,16 @@ def objective(trial) -> float:
                 int(params["num_boost_round"] * config.model.early_stopping_heuristic),  # noqa
                 1
             ),
-            callbacks=[
-                LoggingCallback(),
-                # EarlyStopping(
-                #     rounds=25,
-                #     metric_name=config.model.params_tuning_metric,
-                #     maximize=False,
-                #     save_best=True
-                # )
-            ],
+            callbacks=[LoggingCallback()],
             verbose_eval=False
         )
 
-        if len(cv_results) < params["num_boost_round"]:
-            mlflow.set_tags(
-                {"early_stopping": True, "best_step": len(cv_results) - 1})
+        early_stopping = len(cv_results) < params["num_boost_round"]
+        if early_stopping:
+            mlflow.set_tags({
+                "early_stopping": early_stopping,
+                "best_step": len(cv_results) - 1
+            })
 
         objective_score = cv_results[f"test-{config.model.params_tuning_metric}-mean"].iloc[-1]  # берется CV-метрика с последней итерации бустинга  # noqa
 
@@ -96,9 +91,10 @@ def objective(trial) -> float:
             mlflow.log_metrics(additional_metrics)
 
         trial_log = ", ".join(
-            f"cv_test_{m}: {round(cv_results[f'test-{m}-mean'].iloc[-1], config.project.logging_precision)}"  # noqa
+            f"cv_{m}: {round(cv_results[f'test-{m}-mean'].iloc[-1], config.project.logging_precision)}"  # noqa
             for m in config.model.params_eval_metrics)
-        logger.info(f"Attempt: {trial.number}, {trial_log}")
+        logger.info(
+            f"Attempt: {trial.number}, Early stopping: {early_stopping} | {trial_log}")  # noqa
 
         return objective_score
 
@@ -164,7 +160,8 @@ if __name__ == "__main__":
         features = [i for i in train.columns if i != "target"]
         dtrain = xgb.DMatrix(data=train[features], label=train["target"])
 
-        logger.info("Starting optuna study")
+        logger.info("Starting optuna study with {} objective".format(
+            config.model.params_tuning_metric))
 
         study = optuna.create_study(
             direction=config.model.params_tuning_direction)

@@ -10,10 +10,10 @@ default_test_size: 0.33
 params_tuning_n_trials: 10
 cv_n_folds: 3
 params_eval_metrics:  # last will be used for early stopping
-  - auc
-  - aucpr
   - error
-params_tuning_metric: error
+  - aucpr
+  - auc
+params_tuning_metric: auc
 params_tuning_direction: minimize  # maximize
 additional_metrics:
   gini:
