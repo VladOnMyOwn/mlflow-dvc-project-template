@@ -13,7 +13,7 @@ import xgboost as xgb
 from loguru import logger
 from xgboost.callback import TrainingCallback
 
-from config.core import config
+from config.core import config, PROJECT_ROOT
 
 
 # set up logging
@@ -124,7 +124,9 @@ if __name__ == "__main__":
         ).loc[0, "run_id"]
 
         # download train data from last run
-        with tempfile.TemporaryDirectory() as tmpdir:  # TODO: указать путь
+        tmpdir_path = PROJECT_ROOT / "tmp"
+        tmpdir_path.mkdir(exist_ok=True, parents=True)
+        with tempfile.TemporaryDirectory(dir=tmpdir_path) as tmpdir:
             logger.info(
                 f"Created directory {tmpdir} for downloading datasets")
 
