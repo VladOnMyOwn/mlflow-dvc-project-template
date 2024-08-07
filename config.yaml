@@ -5,6 +5,9 @@ artifacts_datasets_dir: datasets
 logging_precision: 5
 
 # Model related
+model_name: breast_cancer_xgb
+model_save_format: xgb
+sklearn_save_format: pkl
 target_name: target
 default_test_size: 0.33
 params_tuning_n_trials: 10
@@ -23,3 +26,7 @@ additional_metrics:
     source: error
     formula: "1 - {}"
 early_stopping_heuristic: 0.1
+importance_types: # for linear models -- only "weight"
+  - weight  # number of times a feature appears in a tree
+  - gain  # average gain of splits which use the feature
+  - cover  # average number of samples affected by the splits which use the feature

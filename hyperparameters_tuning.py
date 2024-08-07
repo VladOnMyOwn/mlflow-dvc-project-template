@@ -17,11 +17,11 @@ from config.core import config
 
 
 # set up logging
+warnings.filterwarnings("ignore")
+logging.getLogger("mlflow").setLevel(logging.ERROR)
 logger.remove()
 logger.add(
     sys.stdout, format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}")
-warnings.filterwarnings("ignore")
-logging.getLogger("mlflow").setLevel(logging.ERROR)
 optuna.logging.set_verbosity(optuna.logging.ERROR)
 
 

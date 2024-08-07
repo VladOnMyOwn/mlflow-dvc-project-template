@@ -21,6 +21,9 @@ class ProjectConfig(BaseModel):
 
 
 class ModelConfig(BaseModel):
+    model_name: str
+    model_save_format: str
+    sklearn_save_format: str
     default_test_size: float
     params_tuning_n_trials: int
     target_name: str
@@ -30,6 +33,7 @@ class ModelConfig(BaseModel):
     params_tuning_direction: str
     additional_metrics: Optional[Dict[str, Dict[str, str]]]
     early_stopping_heuristic: float
+    importance_types: List[str]
 
 
 class Config(BaseModel):
