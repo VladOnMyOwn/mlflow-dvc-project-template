@@ -14,7 +14,7 @@ params_eval_metrics:  # last will be used for early stopping
   - aucpr
   - auc
 params_tuning_metric: auc
-params_tuning_direction: minimize  # maximize
+params_tuning_direction: maximize  # minimize or maximize
 additional_metrics:
   gini:
     source: auc

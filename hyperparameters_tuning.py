@@ -160,8 +160,8 @@ if __name__ == "__main__":
         features = [i for i in train.columns if i != "target"]
         dtrain = xgb.DMatrix(data=train[features], label=train["target"])
 
-        logger.info("Starting optuna study with {} objective".format(
-            config.model.params_tuning_metric))
+        logger.info("Starting optuna study with objective: {} -> {}".format(
+            config.model.params_tuning_metric, config.model.params_tuning_direction))  # noqa
 
         study = optuna.create_study(
             direction=config.model.params_tuning_direction)
