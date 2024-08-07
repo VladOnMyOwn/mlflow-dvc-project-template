@@ -1,0 +1,11 @@
+python: 3.11.5
+
+# Deps required to build packages [optional]
+build_dependencies:
+- pip==24.2
+- setuptools==65.5.0
+- wheel==0.44.0
+
+# Deps required to run a project
+dependencies:
+- -r requirements.txt

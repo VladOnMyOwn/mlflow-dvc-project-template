@@ -1,0 +1,24 @@
+# Project related
+tracking_server_uri: http://127.0.0.1:3080
+artifacts_destination: s3://gor0h-ml/mlflow_test/
+artifacts_datasets_dir: datasets
+logging_precision: 5
+
+# Model related
+target_name: target
+default_test_size: 0.33
+params_tuning_n_trials: 10
+cv_n_folds: 3
+params_eval_metrics:
+  - auc
+  - aucpr
+  - error
+additional_metrics:
+  gini:
+    source: auc
+    formula: "2 * {} - 1"
+  accuracy:
+    source: error
+    formula: "1 - {}"
+params_tuning_metric: error
+params_tuning_direction: minimize  # maximize

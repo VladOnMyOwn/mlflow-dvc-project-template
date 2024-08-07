@@ -1,0 +1,21 @@
+name: Cancer_Modeling
+
+python_env: python_env.yaml
+
+entry_points:
+    data-preprocessing:
+        parameters:
+            test-size: {type: float, default: 0.33}  # Short syntax
+        command: "python data_preprocessing.py --test-size {test-size}"
+    hyperparameters-tuning:
+        parameters:
+            n-trials:  # Long syntax
+                type: int
+                default: 10
+        command: "python hyperparameters_tuning.py --n-trials {n-trials}"
+    model-training:
+        command: "python model_training.py"
+    data-evaluation:
+        parameters:
+            eval-dataset: path  # Specifying just the data type
+        command: "python data_evaluation.py --eval-dataset {eval-dataset}"
