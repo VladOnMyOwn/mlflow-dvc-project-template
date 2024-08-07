@@ -29,6 +29,7 @@ class ModelConfig(BaseModel):
     params_tuning_metric: str
     params_tuning_direction: str
     additional_metrics: Optional[Dict[str, Dict[str, str]]]
+    early_stopping_heuristic: float
 
 
 class Config(BaseModel):

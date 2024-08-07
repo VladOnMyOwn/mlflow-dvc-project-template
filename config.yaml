@@ -9,10 +9,12 @@ target_name: target
 default_test_size: 0.33
 params_tuning_n_trials: 10
 cv_n_folds: 3
-params_eval_metrics:
+params_eval_metrics:  # last will be used for early stopping
   - auc
   - aucpr
   - error
+params_tuning_metric: error
+params_tuning_direction: minimize  # maximize
 additional_metrics:
   gini:
     source: auc
@@ -20,5 +22,4 @@ additional_metrics:
   accuracy:
     source: error
     formula: "1 - {}"
-params_tuning_metric: error
-params_tuning_direction: minimize  # maximize
+early_stopping_heuristic: 0.1

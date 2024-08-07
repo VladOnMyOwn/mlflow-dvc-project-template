@@ -60,6 +60,8 @@ def objective(trial) -> float:
             dtrain,
             num_boost_round=params["num_boost_round"],
             nfold=config.model.cv_n_folds,
+            early_stopping_rounds=int(
+                params["num_boost_round"] * config.model.early_stopping_heuristic),  # noqa
             callbacks=[
                 LoggingCallback(),
                 # EarlyStopping(
