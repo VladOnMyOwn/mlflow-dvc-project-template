@@ -124,7 +124,7 @@ if __name__ == "__main__":
         ).loc[0, "run_id"]
 
         # download train data from last run
-        with tempfile.TemporaryDirectory() as tmpdir:
+        with tempfile.TemporaryDirectory() as tmpdir:  # TODO: указать путь
             logger.info(
                 f"Created directory {tmpdir} for downloading datasets")
 
