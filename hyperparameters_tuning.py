@@ -60,8 +60,10 @@ def objective(trial) -> float:
             dtrain,
             num_boost_round=params["num_boost_round"],
             nfold=config.model.cv_n_folds,
-            early_stopping_rounds=int(
-                params["num_boost_round"] * config.model.early_stopping_heuristic),  # noqa
+            early_stopping_rounds=max(
+                int(params["num_boost_round"] * config.model.early_stopping_heuristic),  # noqa
+                1
+            ),
             callbacks=[
                 LoggingCallback(),
                 # EarlyStopping(
@@ -74,7 +76,11 @@ def objective(trial) -> float:
             verbose_eval=False
         )
 
-        objective_score = cv_results[f"test-{config.model.params_tuning_metric}-mean"].iloc[-1]  # берется CV-метрика с последней итерации  # noqa
+        if len(cv_results) < params["num_boost_round"]:
+            mlflow.set_tags(
+                {"early_stopping": True, "best_step": len(cv_results) - 1})
+
+        objective_score = cv_results[f"test-{config.model.params_tuning_metric}-mean"].iloc[-1]  # берется CV-метрика с последней итерации бустинга  # noqa
 
         if config.model.additional_metrics is not None:
             additional_metrics = {}
