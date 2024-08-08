@@ -1,0 +1,7 @@
+{
+    "name": "cancer-model",
+    "implementation": "mlserver_mlflow.MLflowRuntime",
+    "parameters": {
+        "uri": "models:/breast_cancer_xgb_sklearn/2"
+    }
+}
