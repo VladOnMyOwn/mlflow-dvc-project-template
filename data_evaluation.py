@@ -1,13 +1,13 @@
-import sys
-import os
 import argparse
-import warnings
 import logging
+import sys
+import warnings
+
 import mlflow
 import pandas as pd
 from loguru import logger
 
-from config.core import config
+from config.core import config, PROJECT_ROOT
 
 
 warnings.filterwarnings("ignore")
@@ -22,7 +22,7 @@ if __name__ == "__main__":
     parser.add_argument("--eval-dataset", type=str)
     eval_dataset_src = parser.parse_args().eval_dataset
 
-    eval_dataset = pd.read_csv(eval_dataset_src)
+    eval_dataset = pd.read_csv(PROJECT_ROOT / eval_dataset_src)
 
     logger.info("Evaluation started")
 
@@ -34,16 +34,27 @@ if __name__ == "__main__":
             eval_dataset,
             name="eval",
             targets="target",
-            source=eval_dataset_src
+            source=PROJECT_ROOT / eval_dataset_src
         )
         # mlflow.log_input(eval_dataset, context="evaluation")  # will be logged by .evaluate method  # noqa
 
-        latest_version = mlflow.MlflowClient().get_registered_model(
-            config.model.model_name).latest_versions[0].version
+        model_uri = f"models:/{config.model.model_name + '_sklearn'}"
+        if config.model.load_by_alias:
+            model_uri += f"@{config.model.champion_model_alias}"
+        else:
+            latest_version = mlflow.MlflowClient().get_registered_model(
+                config.model.model_name + '_sklearn').latest_versions[0].version  # noqa
+            model_uri += f"/{latest_version}"
+
         mlflow.evaluate(
-            model=f"models:/{config.model.model_name}/{latest_version}",
+            model=model_uri,
             model_type=config.model.model_type,
             data=eval_dataset,
             dataset_path=eval_dataset_src,
-            evaluator_config={"pos_label": 1}
-        )
+            evaluator_config={"pos_label": 1},
+            # extra_metrics=
+        )  # не считает все для booster, т.к. его predict выдает вероятность
+        # метрики на вероятностях считает только для sklearn
+        # TODO: сделать альтернативную валидацию для booster
+
+        logger.success("Evaluation finished")

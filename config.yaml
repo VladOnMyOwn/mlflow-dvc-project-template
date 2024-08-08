@@ -8,6 +8,7 @@ logging_precision: 5
 model_name: breast_cancer_xgb
 model_type: classifier  # classifier/regressor/question-answering/text-summarization/text/retriever
 champion_model_alias: champion
+load_by_alias: False
 model_save_format: xgb
 sklearn_save_format: pkl
 target_name: target

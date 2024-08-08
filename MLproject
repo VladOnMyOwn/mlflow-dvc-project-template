@@ -17,5 +17,5 @@ entry_points:
         command: "python model_training.py"
     data-evaluation:
         parameters:
-            eval-dataset: path  # Specifying just the data type
+            eval-dataset: str  # Specifying just the data type
         command: "python data_evaluation.py --eval-dataset {eval-dataset}"
