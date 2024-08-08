@@ -12,6 +12,7 @@ from loguru import logger
 
 from config.core import PROJECT_ROOT, config
 
+
 # set up logging
 warnings.filterwarnings("ignore")
 logging.getLogger("mlflow").setLevel(logging.ERROR)
