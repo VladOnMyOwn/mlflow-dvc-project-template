@@ -1,20 +1,17 @@
 import argparse
 import logging
-import os
 import sys
-import tempfile
 import warnings
 from typing import Literal
 
 import mlflow
 import optuna
-import pandas as pd
 import xgboost as xgb
 from loguru import logger
 from xgboost.callback import TrainingCallback
 
-from config.core import config, PROJECT_ROOT
-from utils import get_last_run
+from config.core import PROJECT_ROOT, config
+from utils import get_last_run, load_logged_data
 
 
 # set up logging
@@ -124,37 +121,16 @@ if __name__ == "__main__":
         # download train data from last run
         tmpdir_path = PROJECT_ROOT / "tmp"
         tmpdir_path.mkdir(exist_ok=True, parents=True)
-        with tempfile.TemporaryDirectory(dir=tmpdir_path) as tmpdir:
-            logger.info(
-                f"Created directory {tmpdir} for downloading datasets")
-
-            # Вариант выгрузки данных, если они залогированы как текстовый артефакт  # noqa
-            # mlflow.artifacts.download_artifacts(
-            #     run_id=last_prep_run["run_id"],
-            #     artifact_path="datasets/train.csv",
-            #     dst_path=tmpdir
-            # )
-
-            # Вариант выгрузки данных, если они не были залогированы как артефакт  # noqa
-            last_prep_run = mlflow.get_run(last_prep_run["run_id"])
-            dataset_input = [dsi for dsi in last_prep_run.inputs.dataset_inputs
-                             if dsi.dataset.name == "train"][0]
-            dataset_source = mlflow.data.get_source(dataset_input)
-            dataset_source.load(dst_path=os.path.join(
-                tmpdir, config.project.artifacts_datasets_dir))
-
-            train = pd.read_csv(os.path.join(
-                tmpdir, f"{config.project.artifacts_datasets_dir}/train.csv"))
-
-            # log train data
-            dataset = mlflow.data.from_pandas(
-                train,
-                name="train",
-                targets="target",
-                source=dataset_source,
-                digest=dataset_input.dataset.digest
-            )
-            mlflow.log_input(dataset, context="finetuning")
+        train = load_logged_data(
+            run_id=last_prep_run["run_id"],
+            tmp_path=tmpdir_path,
+            dataset_name="train",
+            logger=logger,
+            dst_dir=config.project.artifacts_datasets_dir,
+            log_usage=True,
+            targets="target",
+            context="finetuning"
+        )
 
         # convert to DMatrix format
         features = [i for i in train.columns if i != "target"]
@@ -169,7 +145,8 @@ if __name__ == "__main__":
         best_trial = study.best_trial
 
         mlflow.log_params(best_trial.params)
-        logger.info(f"Optimization finished, best params: {best_trial.params}")
+        logger.success(
+            f"Optimization finished, best params: {best_trial.params}")
 
         mlflow.log_metric(f"cv_test_{config.model.params_tuning_metric}",
                           best_trial.value)  # CV-метрика с последней итерации

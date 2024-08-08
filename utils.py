@@ -1,15 +1,17 @@
-from os import PathLike
+import os
+import tempfile
 from pathlib import Path
 from typing import Union
 
 import joblib
 import mlflow
+import pandas as pd
 from loguru._logger import Logger
-from pandas import DataFrame, Series
 from xgboost import Booster, XGBClassifier
 
 
-def get_last_run(experiment_id: str, run_name: str, logger: Logger) -> Series:
+def get_last_run(experiment_id: str, run_name: str,
+                 logger: Logger) -> pd.Series:
 
     last_run = mlflow.search_runs(
         experiment_ids=[experiment_id],
@@ -25,16 +27,65 @@ def get_last_run(experiment_id: str, run_name: str, logger: Logger) -> Series:
     return last_run
 
 
+def load_logged_data(
+    run_id: str,
+    tmp_path: Union[str, os.PathLike],
+    dataset_name: str,
+    logger: Logger,
+    dst_dir: str = "datasets",
+    log_usage: bool = False,
+    **log_usage_kwargs
+) -> pd.DataFrame:
+
+    if isinstance(tmp_path, str):
+        tmp_path = Path(tmp_path)
+
+    with tempfile.TemporaryDirectory(dir=tmp_path) as tmpdir:
+        logger.info("Created directory {} for downloading {} dataset".format(
+            tmpdir, dataset_name))
+
+        # Вариант выгрузки данных, если они залогированы как текстовый артефакт  # noqa
+        # mlflow.artifacts.download_artifacts(
+        #     run_id=last_prep_run["run_id"],
+        #     artifact_path="datasets/train.csv",
+        #     dst_path=tmpdir
+        # )
+
+        run = mlflow.get_run(run_id)
+        dataset_input = [dsi for dsi in run.inputs.dataset_inputs
+                         if dsi.dataset.name == dataset_name][0]
+        dataset_source = mlflow.data.get_source(dataset_input)
+        dataset_source.load(dst_path=os.path.join(tmpdir, dst_dir))
+
+        # File name must match the dataset name
+        data = pd.read_csv(os.path.join(
+            tmpdir, f"{dst_dir}/{dataset_name}.csv"))
+
+    logger.info(f"Dataset {dataset_name} loaded into memory")
+
+    if log_usage:
+        dataset = mlflow.data.from_pandas(
+            data,
+            name=dataset_input.dataset.name,
+            targets=log_usage_kwargs["targets"],
+            source=dataset_source,
+            digest=dataset_input.dataset.digest
+        )
+        mlflow.log_input(dataset, context=log_usage_kwargs["context"])
+
+    return data
+
+
 def log_xgboost_model(
     model: Union[Booster, XGBClassifier],
     artifact_path: str,
-    input_example: DataFrame,
+    input_example: pd.DataFrame,
     prediction_example: str,
     model_name: str,
     model_alias: str,
     mlflow_model_save_format: str,
     local_model_save_format: str,
-    local_models_path: Union[str, PathLike],
+    local_models_path: Union[str, os.PathLike],
     model_name_suffix: str = ""
 ) -> None:
 

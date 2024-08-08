@@ -1,7 +1,5 @@
 import logging
-import os
 import sys
-import tempfile
 import warnings
 
 import mlflow
@@ -10,7 +8,7 @@ import xgboost as xgb
 from loguru import logger
 
 from config.core import PROJECT_ROOT, config
-from utils import get_last_run, log_xgboost_model
+from utils import get_last_run, load_logged_data, log_xgboost_model
 
 # set up logging
 warnings.filterwarnings("ignore")
@@ -46,37 +44,26 @@ if __name__ == "__main__":
         # download train and test data from last run
         tmpdir_path = PROJECT_ROOT / "tmp"
         tmpdir_path.mkdir(exist_ok=True, parents=True)
-        with tempfile.TemporaryDirectory(dir=tmpdir_path) as tmpdir:
-            logger.info(
-                f"Created directory {tmpdir} for downloading datasets")
-
-            last_prep_run = mlflow.get_run(last_prep_run["run_id"])
-            dataset_inputs = [
-                dsi for dsi in last_prep_run.inputs.dataset_inputs
-                if dsi.dataset.name in ["train", "test"]
-            ]
-            for dataset_input in dataset_inputs:
-                dataset_source = mlflow.data.get_source(dataset_input)
-                dataset_source.load(dst_path=os.path.join(
-                    tmpdir, config.project.artifacts_datasets_dir))
-
-            train = pd.read_csv(os.path.join(
-                tmpdir, f"{config.project.artifacts_datasets_dir}/train.csv"))
-            test = pd.read_csv(os.path.join(
-                tmpdir, f"{config.project.artifacts_datasets_dir}/test.csv"))
-
-            # log datasets
-            for dataset_input in dataset_inputs:
-                dataset_source = mlflow.data.get_source(dataset_input)
-                dataset = mlflow.data.from_pandas(
-                    train if dataset_input.dataset.name == "train" else test,
-                    name=dataset_input.dataset.name,
-                    targets="target",
-                    source=dataset_source,
-                    digest=dataset_input.dataset.digest
-                )
-                mlflow.log_input(
-                    dataset, context=f"{dataset_input.dataset.name}ing")
+        train = load_logged_data(
+            run_id=last_prep_run["run_id"],
+            tmp_path=tmpdir_path,
+            dataset_name="train",
+            logger=logger,
+            dst_dir=config.project.artifacts_datasets_dir,
+            log_usage=True,
+            targets="target",
+            context="training"
+        )
+        test = load_logged_data(
+            run_id=last_prep_run["run_id"],
+            tmp_path=tmpdir_path,
+            dataset_name="test",
+            logger=logger,
+            dst_dir=config.project.artifacts_datasets_dir,
+            log_usage=True,
+            targets="target",
+            context="testing"
+        )
 
         # convert to DMatrix format
         features = [i for i in train.columns if i != "target"]
@@ -158,4 +145,4 @@ if __name__ == "__main__":
             model_name_suffix="_sklearn"
         )
 
-        logger.info("Model training finished")
+        logger.success("Model training finished")
