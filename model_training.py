@@ -162,7 +162,7 @@ if __name__ == "__main__":
             artifact_path="sklearn",
             input_example=input_example,
             registered_model_name=config.model.model_name + "_sklearn",
-            model_format=config.model.sklearn_save_format
+            model_format=config.model.model_save_format
         )
         client.set_registered_model_alias(
             config.model.model_name + "_sklearn",

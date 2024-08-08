@@ -26,7 +26,6 @@ class ModelConfig(BaseModel):
     champion_model_alias: str
     load_by_alias: bool
     model_save_format: str
-    sklearn_save_format: str
     default_test_size: float
     params_tuning_n_trials: int
     target_name: str
