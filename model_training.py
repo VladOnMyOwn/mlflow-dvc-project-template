@@ -115,10 +115,6 @@ if __name__ == "__main__":
             )
         )
 
-        # mlflow.log_metric(
-        #     f"test_{config.model.params_tuning_metric}",
-        #     model.best_score
-        # )  # already logged by autologging as best iteration (and appended as last iteration to all plots)  # noqa
         logger.info("Best iteration test_{}: {}".format(
             config.model.params_tuning_metric, model.best_score))
 
@@ -140,26 +136,31 @@ if __name__ == "__main__":
             registered_model_name=config.model.model_name,
             model_format=config.model.mlflow_model_save_format,
         )
+        model_version = model_info.registered_model_version
         client.set_registered_model_alias(
             config.model.model_name,
-            version=model_info.registered_model_version,
+            version=model_version,
             alias=config.model.champion_model_alias
         )  # will automatically reassign alias to the latest model version
         mlflow.log_text(
             predictions_example.to_json(orient="split", index=False),
             artifact_file="booster/predictions_example.json"
         )
-        local_model_file = "{}.{}".format(
-            config.model.model_name, config.model.local_model_save_format)
+        local_model_file = "{}_v{}.{}".format(
+            config.model.model_name,
+            model_version,
+            config.model.local_model_save_format
+        )
         model.save_model(local_models_path / local_model_file)
         mlflow.log_artifact(
             local_models_path / local_model_file,
             artifact_path="booster"
         )
         joblib.dump(model, local_models_path /
-                    f"{config.model.model_name}.pkl")
+                    f"{config.model.model_name}_v{model_version}.pkl")  # noqa
         mlflow.log_artifact(
-            local_models_path / f"{config.model.model_name}.pkl",
+            local_models_path /
+            f"{config.model.model_name}_v{model_version}.pkl",
             artifact_path="booster"
         )
 
@@ -181,17 +182,19 @@ if __name__ == "__main__":
             registered_model_name=config.model.model_name + "_sklearn",
             model_format=config.model.mlflow_model_save_format
         )
+        model_version = model_info.registered_model_version
         client.set_registered_model_alias(
             config.model.model_name + "_sklearn",
-            version=model_info.registered_model_version,
+            version=model_version,
             alias=config.model.champion_model_alias
         )
         mlflow.log_text(
             predictions_example.to_json(orient="split", index=False),
             artifact_file="sklearn/predictions_example.json"
         )
-        local_model_file = "{}.{}".format(
+        local_model_file = "{}_v{}.{}".format(
             config.model.model_name + "_sklearn",
+            model_version,
             config.model.local_model_save_format
         )
         skl_model.save_model(local_models_path / local_model_file)
@@ -199,10 +202,13 @@ if __name__ == "__main__":
             local_models_path / local_model_file,
             artifact_path="sklearn"
         )
-        joblib.dump(skl_model, local_models_path /
-                    f"{config.model.model_name + '_sklearn'}.pkl")
+        joblib.dump(
+            skl_model, local_models_path /
+            f"{config.model.model_name + '_sklearn'}_v{model_version}.pkl"
+        )
         mlflow.log_artifact(
-            local_models_path / f"{config.model.model_name + '_sklearn'}.pkl",
+            local_models_path /
+            f"{config.model.model_name + '_sklearn'}_v{model_version}.pkl",
             artifact_path="sklearn"
         )
 
