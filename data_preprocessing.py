@@ -56,6 +56,9 @@ if __name__ == "__main__":
         "features_count": X.shape[1]
     })
 
+    # TODO: add logging custom artifacts:
+    # correlation matrix, VIF table, WoE / IV tables, distibution plots
+
     # split dataset into train and test parts and log sizes to mlflow
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=TEST_SIZE)

@@ -146,6 +146,9 @@ if __name__ == "__main__":
             artifact_file="booster/predictions_example.json"
         )
 
+        # TODO: add logging custom artifacts:
+        # ROC plot, PRC plot, calibration curve
+
         # log and register model as sklearn compatible classifier
         params.update(num_boost_round=model.best_iteration)
         skl_model = xgb.XGBClassifier(**params)
