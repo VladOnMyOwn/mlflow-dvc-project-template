@@ -15,7 +15,7 @@ entry_points:
         command: "python hyperparameters_tuning.py --n-trials {n-trials}"
     model-training:
         command: "python model_training.py"
-    data-evaluation:
+    model-evaluation:
         parameters:
             eval-dataset: str  # Specifying just the data type
-        command: "python data_evaluation.py --eval-dataset {eval-dataset}"
+        command: "python model_evaluation.py --eval-dataset {eval-dataset}"
