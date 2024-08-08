@@ -21,11 +21,13 @@ class ProjectConfig(BaseModel):
 
 
 class ModelConfig(BaseModel):
+    model_save_dir: str
     model_name: str
     model_type: str
     champion_model_alias: str
     load_by_alias: bool
-    model_save_format: str
+    mlflow_model_save_format: str
+    local_model_save_format: str
     default_test_size: float
     params_tuning_n_trials: int
     target_name: str

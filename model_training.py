@@ -4,13 +4,13 @@ import sys
 import tempfile
 import warnings
 
+import joblib
 import mlflow
 import pandas as pd
 import xgboost as xgb
 from loguru import logger
 
-from config.core import config, PROJECT_ROOT
-
+from config.core import PROJECT_ROOT, config
 
 # set up logging
 warnings.filterwarnings("ignore")
@@ -87,7 +87,7 @@ if __name__ == "__main__":
         dtest = xgb.DMatrix(data=test[features], label=test["target"])
 
         # get last finished run for hyperparameters tuning
-        # TODO: сделать альтернаьтивный вариант выбора кастомного запуска, не только последнего  # noqa
+        # TODO: сделать альтернативный вариант выбора кастомного запуска, не только последнего  # noqa
         last_tuning_run = mlflow.search_runs(
             experiment_ids=[experiment_id],
             filter_string="tags.mlflow.runName = 'Hyperparameters_Search' and status = 'FINISHED'",  # noqa
@@ -123,6 +123,9 @@ if __name__ == "__main__":
 
         client = mlflow.MlflowClient()
 
+        local_models_path = PROJECT_ROOT / config.model.model_save_dir
+        local_models_path.mkdir(exist_ok=True, parents=True)
+
         # log and register model
         input_example = test.loc[0:10, features]
         predictions_example = pd.DataFrame(
@@ -134,16 +137,29 @@ if __name__ == "__main__":
             artifact_path="booster",
             input_example=input_example,
             registered_model_name=config.model.model_name,
-            model_format=config.model.model_save_format,
+            model_format=config.model.mlflow_model_save_format,
         )
         client.set_registered_model_alias(
             config.model.model_name,
             version=model_info.registered_model_version,
             alias=config.model.champion_model_alias
-        )
+        )  # will automatically reassign alias to the latest model version
         mlflow.log_text(
             predictions_example.to_json(orient="split", index=False),
             artifact_file="booster/predictions_example.json"
+        )
+        local_model_file = "{}.{}".format(
+            config.model.model_name, config.model.local_model_save_format)
+        model.save_model(local_models_path / local_model_file)
+        mlflow.log_artifact(
+            local_models_path / local_model_file,
+            artifact_path="booster"
+        )
+        joblib.dump(model, local_models_path /
+                    f"{config.model.model_name}.pkl")
+        mlflow.log_artifact(
+            local_models_path / f"{config.model.model_name}.pkl",
+            artifact_path="booster"
         )
 
         # TODO: add logging custom artifacts:
@@ -162,7 +178,7 @@ if __name__ == "__main__":
             artifact_path="sklearn",
             input_example=input_example,
             registered_model_name=config.model.model_name + "_sklearn",
-            model_format=config.model.model_save_format
+            model_format=config.model.mlflow_model_save_format
         )
         client.set_registered_model_alias(
             config.model.model_name + "_sklearn",
@@ -172,6 +188,21 @@ if __name__ == "__main__":
         mlflow.log_text(
             predictions_example.to_json(orient="split", index=False),
             artifact_file="sklearn/predictions_example.json"
+        )
+        local_model_file = "{}.{}".format(
+            config.model.model_name + "_sklearn",
+            config.model.local_model_save_format
+        )
+        skl_model.save_model(local_models_path / local_model_file)
+        mlflow.log_artifact(
+            local_models_path / local_model_file,
+            artifact_path="sklearn"
+        )
+        joblib.dump(skl_model, local_models_path /
+                    f"{config.model.model_name + '_sklearn'}.pkl")
+        mlflow.log_artifact(
+            local_models_path / f"{config.model.model_name + '_sklearn'}.pkl",
+            artifact_path="sklearn"
         )
 
         logger.info("Model training finished")
