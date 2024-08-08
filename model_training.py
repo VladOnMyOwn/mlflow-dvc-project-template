@@ -10,8 +10,7 @@ import xgboost as xgb
 from loguru import logger
 
 from config.core import PROJECT_ROOT, config
-from utils import log_xgboost_model
-
+from utils import get_last_run, log_xgboost_model
 
 # set up logging
 warnings.filterwarnings("ignore")
@@ -41,11 +40,8 @@ if __name__ == "__main__":
         logger.info(f"Starting MLflow run: {run_id}")
 
         # get last finished run for data preprocessing
-        last_prep_run_id = mlflow.search_runs(
-            experiment_ids=[experiment_id],
-            filter_string="tags.mlflow.runName = 'Data_Preprocessing' and status = 'FINISHED'",  # noqa
-            order_by=["start_time DESC"]
-        ).loc[0, "run_id"]
+        last_prep_run = get_last_run(
+            experiment_id, "Data_Preprocessing", logger)
 
         # download train and test data from last run
         tmpdir_path = PROJECT_ROOT / "tmp"
@@ -54,7 +50,7 @@ if __name__ == "__main__":
             logger.info(
                 f"Created directory {tmpdir} for downloading datasets")
 
-            last_prep_run = mlflow.get_run(last_prep_run_id)
+            last_prep_run = mlflow.get_run(last_prep_run["run_id"])
             dataset_inputs = [
                 dsi for dsi in last_prep_run.inputs.dataset_inputs
                 if dsi.dataset.name in ["train", "test"]
@@ -89,11 +85,8 @@ if __name__ == "__main__":
 
         # get last finished run for hyperparameters tuning
         # TODO: сделать альтернативный вариант выбора кастомного запуска, не только последнего  # noqa
-        last_tuning_run = mlflow.search_runs(
-            experiment_ids=[experiment_id],
-            filter_string="tags.mlflow.runName = 'Hyperparameters_Search' and status = 'FINISHED'",  # noqa
-            order_by=["start_time DESC"]
-        ).loc[0, :]
+        last_tuning_run = get_last_run(
+            experiment_id, "Hyperparameters_Search", logger)
 
         # get best params
         params = {col.split(".")[1]: last_tuning_run[col]

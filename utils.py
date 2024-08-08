@@ -4,8 +4,25 @@ from typing import Union
 
 import joblib
 import mlflow
-from pandas import DataFrame
+from loguru._logger import Logger
+from pandas import DataFrame, Series
 from xgboost import Booster, XGBClassifier
+
+
+def get_last_run(experiment_id: str, run_name: str, logger: Logger) -> Series:
+
+    last_run = mlflow.search_runs(
+        experiment_ids=[experiment_id],
+        filter_string=f"tags.mlflow.runName = '{run_name}' and status = 'FINISHED'",  # noqa
+        order_by=["start_time DESC"]
+    ).loc[0, :]
+
+    if last_run.empty:
+        message = f"Run {run_name} was not found"
+        logger.error(message)
+        raise Exception(message)
+
+    return last_run
 
 
 def log_xgboost_model(

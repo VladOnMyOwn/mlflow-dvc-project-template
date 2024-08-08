@@ -14,6 +14,7 @@ from loguru import logger
 from xgboost.callback import TrainingCallback
 
 from config.core import config, PROJECT_ROOT
+from utils import get_last_run
 
 
 # set up logging
@@ -117,11 +118,8 @@ if __name__ == "__main__":
         experiment_id = run.info.experiment_id
 
         # get last finished run for data preprocessing
-        last_prep_run_id = mlflow.search_runs(
-            experiment_ids=[experiment_id],
-            filter_string="tags.mlflow.runName = 'Data_Preprocessing' and status = 'FINISHED'",  # noqa
-            order_by=["start_time DESC"]
-        ).loc[0, "run_id"]
+        last_prep_run = get_last_run(
+            experiment_id, "Data_Preprocessing", logger)
 
         # download train data from last run
         tmpdir_path = PROJECT_ROOT / "tmp"
@@ -132,13 +130,13 @@ if __name__ == "__main__":
 
             # Вариант выгрузки данных, если они залогированы как текстовый артефакт  # noqa
             # mlflow.artifacts.download_artifacts(
-            #     run_id=last_prep_run_id,
+            #     run_id=last_prep_run["run_id"],
             #     artifact_path="datasets/train.csv",
             #     dst_path=tmpdir
             # )
 
             # Вариант выгрузки данных, если они не были залогированы как артефакт  # noqa
-            last_prep_run = mlflow.get_run(last_prep_run_id)
+            last_prep_run = mlflow.get_run(last_prep_run["run_id"])
             dataset_input = [dsi for dsi in last_prep_run.inputs.dataset_inputs
                              if dsi.dataset.name == "train"][0]
             dataset_source = mlflow.data.get_source(dataset_input)
