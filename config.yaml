@@ -6,6 +6,8 @@ logging_precision: 5
 
 # Model related
 model_name: breast_cancer_xgb
+model_type: classifier  # classifier/regressor/question-answering/text-summarization/text/retriever
+champion_model_alias: champion
 model_save_format: xgb
 sklearn_save_format: pkl
 target_name: target
@@ -17,7 +19,7 @@ params_eval_metrics:  # last will be used for early stopping
   - aucpr
   - auc
 params_tuning_metric: auc
-params_tuning_direction: maximize  # minimize or maximize
+params_tuning_direction: maximize  # minimize/maximize
 additional_metrics:
   gini:
     source: auc

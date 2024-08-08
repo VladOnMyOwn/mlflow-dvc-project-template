@@ -87,6 +87,7 @@ if __name__ == "__main__":
         dtest = xgb.DMatrix(data=test[features], label=test["target"])
 
         # get last finished run for hyperparameters tuning
+        # TODO: сделать альтернаьтивный вариант выбора кастомного запуска, не только последнего  # noqa
         last_tuning_run = mlflow.search_runs(
             experiment_ids=[experiment_id],
             filter_string="tags.mlflow.runName = 'Hyperparameters_Search' and status = 'FINISHED'",  # noqa
@@ -120,18 +121,25 @@ if __name__ == "__main__":
         logger.info("Best iteration test_{}: {}".format(
             config.model.params_tuning_metric, model.best_score))
 
+        client = mlflow.MlflowClient()
+
         # log and register model
         input_example = test.loc[0:10, features]
         predictions_example = pd.DataFrame(
             model.predict(xgb.DMatrix(input_example)),
             columns=["predictions"]
         )
-        mlflow.xgboost.log_model(
+        model_info = mlflow.xgboost.log_model(
             model,
             artifact_path="booster",
             input_example=input_example,
             registered_model_name=config.model.model_name,
             model_format=config.model.model_save_format,
+        )
+        client.set_registered_model_alias(
+            config.model.model_name,
+            version=model_info.registered_model_version,
+            alias=config.model.champion_model_alias
         )
         mlflow.log_text(
             predictions_example.to_json(orient="split", index=False),
@@ -146,12 +154,17 @@ if __name__ == "__main__":
             skl_model.predict_proba(input_example)[:, 1],
             columns=["predictions"]
         )
-        mlflow.xgboost.log_model(
+        model_info = mlflow.xgboost.log_model(
             skl_model,
             artifact_path="sklearn",
             input_example=input_example,
             registered_model_name=config.model.model_name + "_sklearn",
             model_format=config.model.sklearn_save_format
+        )
+        client.set_registered_model_alias(
+            config.model.model_name + "_sklearn",
+            version=model_info.registered_model_version,
+            alias=config.model.champion_model_alias
         )
         mlflow.log_text(
             predictions_example.to_json(orient="split", index=False),
