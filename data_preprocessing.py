@@ -74,6 +74,9 @@ if __name__ == "__main__":
             config.project.datasets_file_format
         )  # will be logged into experiment_id/run_id/artifacts/datasets
     )
+    # вместо этого можно делать log_artifact для любого формата файла, но
+    # не желательно, т.к. данные будут дублироваться для каждого запуска
+    # или записывать файл в удаленное/локальное хранилище
     dataset_source_link = mlflow.get_artifact_uri(
         "{}/{}.{}".format(
             config.project.artifacts_datasets_dir,
