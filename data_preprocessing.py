@@ -68,10 +68,18 @@ if __name__ == "__main__":
     train = X_train.assign(**{config.model.target_name: y_train})
     mlflow.log_text(
         train.to_csv(index=False),
-        f"{config.project.artifacts_datasets_dir}/{config.project.train_dataset_name}.csv"  # will be logged into experiment_id/run_id/artifacts/datasets  # noqa
+        "{}/{}.{}".format(
+            config.project.artifacts_datasets_dir,
+            config.project.train_dataset_name,
+            config.project.datasets_file_format
+        )  # will be logged into experiment_id/run_id/artifacts/datasets
     )
     dataset_source_link = mlflow.get_artifact_uri(
-        f"{config.project.artifacts_datasets_dir}/{config.project.train_dataset_name}.csv"  # noqa
+        "{}/{}.{}".format(
+            config.project.artifacts_datasets_dir,
+            config.project.train_dataset_name,
+            config.project.datasets_file_format
+        )
     ).replace(
         "mlflow-artifacts:/",
         config.project.artifacts_destination
@@ -87,10 +95,18 @@ if __name__ == "__main__":
     test = X_test.assign(**{config.model.target_name: y_test})
     mlflow.log_text(
         test.to_csv(index=False),
-        f"{config.project.artifacts_datasets_dir}/{config.project.test_dataset_name}.csv"  # noqa
+        "{}/{}.{}".format(
+            config.project.artifacts_datasets_dir,
+            config.project.test_dataset_name,
+            config.project.datasets_file_format
+        )
     )
     dataset_source_link = mlflow.get_artifact_uri(
-        f"{config.project.artifacts_datasets_dir}/{config.project.test_dataset_name}.csv"  # noqa
+        "{}/{}.{}".format(
+            config.project.artifacts_datasets_dir,
+            config.project.test_dataset_name,
+            config.project.datasets_file_format
+        )
     ).replace(
         "mlflow-artifacts:/",
         config.project.artifacts_destination

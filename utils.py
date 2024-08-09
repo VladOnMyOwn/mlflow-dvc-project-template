@@ -9,6 +9,8 @@ import pandas as pd
 from loguru._logger import Logger
 from xgboost import Booster, XGBClassifier
 
+from config.core import config
+
 
 def get_last_run(experiment_id: str, run_name: str,
                  logger: Logger) -> pd.Series:
@@ -75,7 +77,9 @@ def load_logged_data(
 
         # File name must match the dataset name
         data = pd.read_csv(os.path.join(
-            tmpdir, f"{dst_dir}/{dataset_name}.csv"))
+            tmpdir,
+            f"{dst_dir}/{dataset_name}.{config.project.datasets_file_format}")
+        )
 
     logger.info(f"Dataset {dataset_name} loaded into memory")
 
