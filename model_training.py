@@ -12,6 +12,7 @@ from config.core import PROJECT_ROOT, config
 from utils import (get_last_run, get_run_by_id, load_logged_data,
                    log_xgboost_model)
 
+
 # set up logging
 warnings.filterwarnings("ignore")
 logging.getLogger("mlflow").setLevel(logging.ERROR)
