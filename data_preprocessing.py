@@ -65,7 +65,7 @@ if __name__ == "__main__":
     })
 
     # log and register datasets
-    train = X_train.assign(target=y_train)
+    train = X_train.assign(**{config.model.target_name: y_train})
     mlflow.log_text(
         train.to_csv(index=False),
         f"{config.project.artifacts_datasets_dir}/{config.project.train_dataset_name}.csv"  # will be logged into experiment_id/run_id/artifacts/datasets  # noqa
@@ -79,12 +79,12 @@ if __name__ == "__main__":
     dataset = mlflow.data.from_pandas(
         train,
         name=config.project.train_dataset_name,
-        targets="target",
+        targets=config.model.target_name,
         source=dataset_source_link  # можно указать путь к файлу (в т.ч. в s3)
     )
     mlflow.log_input(dataset, context="preprocessing")
 
-    test = X_test.assign(target=y_test)
+    test = X_test.assign(**{config.model.target_name: y_test})
     mlflow.log_text(
         test.to_csv(index=False),
         f"{config.project.artifacts_datasets_dir}/{config.project.test_dataset_name}.csv"  # noqa
@@ -98,7 +98,7 @@ if __name__ == "__main__":
     dataset = mlflow.data.from_pandas(
         test,
         name=config.project.test_dataset_name,
-        targets="target",
+        targets=config.model.target_name,
         source=dataset_source_link
     )
     mlflow.log_input(dataset, context="preprocessing")

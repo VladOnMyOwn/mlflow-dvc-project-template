@@ -65,7 +65,7 @@ if __name__ == "__main__":
             logger=logger,
             dst_dir=config.project.artifacts_datasets_dir,
             log_usage=True,
-            targets="target",
+            targets=config.model.target_name,
             context="training"
         )
         test = load_logged_data(
@@ -75,14 +75,20 @@ if __name__ == "__main__":
             logger=logger,
             dst_dir=config.project.artifacts_datasets_dir,
             log_usage=True,
-            targets="target",
+            targets=config.model.target_name,
             context="testing"
         )
 
         # convert to DMatrix format
-        features = [i for i in train.columns if i != "target"]
-        dtrain = xgb.DMatrix(data=train[features], label=train["target"])
-        dtest = xgb.DMatrix(data=test[features], label=test["target"])
+        features = [i for i in train.columns if i != config.model.target_name]
+        dtrain = xgb.DMatrix(
+            data=train[features],
+            label=train[config.model.target_name]
+        )
+        dtest = xgb.DMatrix(
+            data=test[features],
+            label=test[config.model.target_name]
+        )
 
         if not PARAMS_RUN_ID:
             # get last finished parent run for hyperparameters tuning
@@ -146,7 +152,7 @@ if __name__ == "__main__":
         # log and register model as sklearn compatible classifier
         params.update(num_boost_round=model.best_iteration)
         skl_model = xgb.XGBClassifier(**params)
-        skl_model.fit(train[features], train["target"])
+        skl_model.fit(train[features], train[config.model.target_name])
         predictions_example = pd.DataFrame(
             skl_model.predict_proba(input_example)[:, 1],
             columns=["predictions"]

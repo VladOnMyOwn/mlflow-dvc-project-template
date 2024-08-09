@@ -136,13 +136,16 @@ if __name__ == "__main__":
             logger=logger,
             dst_dir=config.project.artifacts_datasets_dir,
             log_usage=True,
-            targets="target",
+            targets=config.model.target_name,
             context="finetuning"
         )
 
         # convert to DMatrix format
-        features = [i for i in train.columns if i != "target"]
-        dtrain = xgb.DMatrix(data=train[features], label=train["target"])
+        features = [i for i in train.columns if i != config.model.target_name]
+        dtrain = xgb.DMatrix(
+            data=train[features],
+            label=train[config.model.target_name]
+        )
 
         logger.info("Starting optuna study with objective: {} -> {}".format(
             config.model.params_tuning_metric, config.model.params_tuning_direction))  # noqa

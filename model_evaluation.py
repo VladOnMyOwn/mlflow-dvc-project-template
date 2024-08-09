@@ -33,7 +33,7 @@ if __name__ == "__main__":
         eval_dataset = mlflow.data.from_pandas(
             eval_dataset,
             name="eval",
-            targets="target",
+            targets=config.model.target_name,
             source=PROJECT_ROOT / eval_dataset_src
         )
         # mlflow.log_input(eval_dataset, context="evaluation")  # will be logged by .evaluate method  # noqa
