@@ -3,6 +3,7 @@ import tempfile
 from pathlib import Path
 from typing import Union
 
+# import dvc.api
 import joblib
 import mlflow
 import pandas as pd
@@ -156,3 +157,13 @@ def log_xgboost_model(
         f"{model_name + model_name_suffix}_v{model_version}.pkl",
         artifact_path=artifact_path
     )
+
+
+# def load_versioned_data():
+
+#     with dvc.api.open(
+#             path=,
+#             rev="v1",
+#             remote=,
+#             remote_config=) as f:
+#     ...

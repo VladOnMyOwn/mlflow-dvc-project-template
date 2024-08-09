@@ -2,6 +2,7 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Optional
 
+from dotenv import dotenv_values
 from pydantic import BaseModel
 from strictyaml import YAML, load
 
@@ -11,6 +12,7 @@ from mlproject import __file__  # noqa
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 CONFIG_FILE_PATH = PROJECT_ROOT / "config.yaml"
+STORAGE_CONFIG_FILE_PATH = PROJECT_ROOT / ".env"
 
 
 class ProjectConfig(BaseModel):
@@ -21,6 +23,13 @@ class ProjectConfig(BaseModel):
     train_dataset_name: str
     test_dataset_name: str
     datasets_file_format: str
+
+
+class StorageConfig(BaseModel):
+    endpointurl: str
+    region: str
+    access_key_id: str
+    secret_access_key: str
 
 
 class ModelConfig(BaseModel):
@@ -44,19 +53,20 @@ class ModelConfig(BaseModel):
 
 
 class Config(BaseModel):
+    storage: Optional[StorageConfig]
     project: ProjectConfig
     model: ModelConfig
 
 
-def find_config_file() -> Path:
-    if CONFIG_FILE_PATH.is_file():
-        return CONFIG_FILE_PATH
-    raise FileNotFoundError(f"Config not found at {CONFIG_FILE_PATH}")
+def find_config_file(cfg_path: Path) -> Path:
+    if cfg_path.is_file():
+        return cfg_path
+    raise FileNotFoundError(f"Config not found at {cfg_path}")
 
 
 def fetch_config_from_yaml(cfg_path: Optional[Path] = None) -> YAML:
     if not cfg_path:
-        cfg_path = find_config_file()
+        cfg_path = find_config_file(CONFIG_FILE_PATH)
 
     if cfg_path:
         with open(cfg_path, "r") as conf_file:
@@ -64,12 +74,36 @@ def fetch_config_from_yaml(cfg_path: Optional[Path] = None) -> YAML:
             return parsed_config
 
 
+def fetch_config_from_dotenv(
+        cfg_path: Optional[Path] = None) -> Optional[Dict[str, str]]:
+    if not cfg_path:
+        try:
+            cfg_path = find_config_file(STORAGE_CONFIG_FILE_PATH)
+        except FileNotFoundError:
+            return None
+
+    if cfg_path:
+        env_vars = dotenv_values(cfg_path)
+        parsed_config = {
+            "endpointurl": env_vars["AWS_ENDPOINT_URL"],
+            "region": env_vars["AWS_DEFAULT_REGION"],
+            "access_key_id": env_vars["AWS_ACCESS_KEY_ID"],
+            "secret_access_key": env_vars["AWS_SECRET_ACCESS_KEY"]
+        }
+        return parsed_config
+
+
 def create_and_validate_config(
-        parsed_config: Optional[YAML] = None) -> Config:
+        parsed_config: Optional[YAML] = None,
+        parsed_storage_config: Optional[Dict[str, str]] = None) -> Config:
     if parsed_config is None:
         parsed_config = fetch_config_from_yaml()
+    if parsed_storage_config is None:
+        parsed_storage_config = fetch_config_from_dotenv()
 
     _config = Config(
+        storage=StorageConfig(**parsed_storage_config)
+        if parsed_storage_config is not None else None,
         project=ProjectConfig(**parsed_config.data),
         model=ModelConfig(**parsed_config.data)
     )
@@ -78,3 +112,4 @@ def create_and_validate_config(
 
 
 config = create_and_validate_config()
+print(config.storage.__repr__())
