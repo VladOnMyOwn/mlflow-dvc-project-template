@@ -27,6 +27,22 @@ def get_last_run(experiment_id: str, run_name: str,
     return last_run
 
 
+def get_run_by_id(experiment_id: str, run_id: str,
+                  logger: Logger) -> pd.Series:
+
+    run = mlflow.search_runs(
+        experiment_ids=[experiment_id],
+        filter_string=f"attributes.run_id = '{run_id}' and status = 'FINISHED'"  # noqa
+    ).loc[0, :]
+
+    if run.empty:
+        message = f"Run with id {run_id} was not found"
+        logger.error(message)
+        raise Exception(message)
+
+    return run
+
+
 def load_logged_data(
     run_id: str,
     tmp_path: Union[str, os.PathLike],

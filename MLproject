@@ -14,7 +14,9 @@ entry_points:
                 default: 10
         command: "python hyperparameters_tuning.py --n-trials {n-trials}"
     model-training:
-        command: "python model_training.py"
+        parameters:
+            tuning-run-id: {type: str, default: ""}
+        command: "python model_training.py --tuning-run-id {tuning-run-id}"
     model-evaluation:
         parameters:
             eval-dataset: str  # Specifying just the data type

@@ -1,3 +1,4 @@
+import argparse
 import logging
 import sys
 import warnings
@@ -8,7 +9,8 @@ import xgboost as xgb
 from loguru import logger
 
 from config.core import PROJECT_ROOT, config
-from utils import get_last_run, load_logged_data, log_xgboost_model
+from utils import (get_last_run, get_run_by_id, load_logged_data,
+                   log_xgboost_model)
 
 # set up logging
 warnings.filterwarnings("ignore")
@@ -19,6 +21,10 @@ logger.add(
 
 
 if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--tuning-run-id", default="", type=str)
+    PARAMS_RUN_ID = parser.parse_args().tuning_run_id
 
     logger.info("Model training started")
 
@@ -70,16 +76,22 @@ if __name__ == "__main__":
         dtrain = xgb.DMatrix(data=train[features], label=train["target"])
         dtest = xgb.DMatrix(data=test[features], label=test["target"])
 
-        # get last finished run for hyperparameters tuning
-        # TODO: сделать альтернативный вариант выбора кастомного запуска, не только последнего  # noqa
-        last_tuning_run = get_last_run(
-            experiment_id, "Hyperparameters_Search", logger)
+        if not PARAMS_RUN_ID:
+            # get last finished parent run for hyperparameters tuning
+            tuning_run = get_last_run(
+                experiment_id, "Hyperparameters_Search", logger)
+        else:
+            # get hyperparameters tuning run with specified run id
+            tuning_run = get_run_by_id(
+                experiment_id, PARAMS_RUN_ID, logger)
 
         # get best params
-        params = {col.split(".")[1]: last_tuning_run[col]
-                  for col in last_tuning_run.index if "params" in col}
+        params = {
+            col.split(".")[1]: tuning_run[col]
+            for col in tuning_run.index if (
+                ("params" in col) and ("n-trials" not in col))
+        }
         params.update(eval_metric=config.model.params_eval_metrics)
-        del params["n-trials"]
 
         mlflow.log_params(params)
 
