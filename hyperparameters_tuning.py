@@ -11,7 +11,7 @@ from loguru import logger
 from xgboost.callback import TrainingCallback
 
 from config.core import PROJECT_ROOT, config
-from utils import get_last_run, load_logged_data
+from utils import get_last_run, get_run_by_id, load_logged_data
 
 
 # set up logging
@@ -101,9 +101,12 @@ if __name__ == "__main__":
 
     # get arguments if running not in ipykernel
     parser = argparse.ArgumentParser()
+    parser.add_argument("--data-run-id", default="", type=str)
     parser.add_argument(
         "--n-trials", default=config.model.params_tuning_n_trials, type=int)
-    N_TRIALS = parser.parse_args().n_trials
+    cmd_args = parser.parse_args()
+    DATA_RUN_ID = cmd_args.data_run_id
+    N_TRIALS = cmd_args.n_trials
 
     logger.info(f"Hyperparameters tuning started with {N_TRIALS} trials")
 
@@ -114,15 +117,20 @@ if __name__ == "__main__":
         # get experiment id
         experiment_id = run.info.experiment_id
 
-        # get last finished run for data preprocessing
-        last_prep_run = get_last_run(
-            experiment_id, "Data_Preprocessing", logger)
+        if not DATA_RUN_ID:
+            # get last finished run for data preprocessing
+            data_run = get_last_run(
+                experiment_id, "Data_Preprocessing", logger)
+        else:
+            # get data preprocessing run with specified run id
+            data_run = get_run_by_id(
+                experiment_id, DATA_RUN_ID, logger)
 
         # download train data from last run
         tmpdir_path = PROJECT_ROOT / "tmp"
         tmpdir_path.mkdir(exist_ok=True, parents=True)
         train = load_logged_data(
-            run_id=last_prep_run["run_id"],
+            run_id=data_run["run_id"],
             tmp_path=tmpdir_path,
             dataset_name="train",
             logger=logger,

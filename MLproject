@@ -9,14 +9,16 @@ entry_points:
         command: "python data_preprocessing.py --test-size {test-size}"
     hyperparameters-tuning:
         parameters:
+            data-run-id: {type: str, default: ""}
             n-trials:  # Long syntax
                 type: int
                 default: 10
-        command: "python hyperparameters_tuning.py --n-trials {n-trials}"
+        command: "python hyperparameters_tuning.py --data-run-id {data-run-id} --n-trials {n-trials}"
     model-training:
         parameters:
+            data-run-id: {type: str, default: ""}
             tuning-run-id: {type: str, default: ""}
-        command: "python model_training.py --tuning-run-id {tuning-run-id}"
+        command: "python model_training.py --data-run-id {data-run-id} --tuning-run-id {tuning-run-id}"
     model-evaluation:
         parameters:
             eval-dataset: str  # Specifying just the data type

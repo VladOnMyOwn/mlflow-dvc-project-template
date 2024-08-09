@@ -23,8 +23,11 @@ logger.add(
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
+    parser.add_argument("--data-run-id", default="", type=str)
     parser.add_argument("--tuning-run-id", default="", type=str)
-    PARAMS_RUN_ID = parser.parse_args().tuning_run_id
+    cmd_args = parser.parse_args()
+    DATA_RUN_ID = cmd_args.data_run_id
+    PARAMS_RUN_ID = cmd_args.tuning_run_id
 
     logger.info("Model training started")
 
@@ -43,15 +46,20 @@ if __name__ == "__main__":
         run_id = run.info.run_id
         logger.info(f"Starting MLflow run: {run_id}")
 
-        # get last finished run for data preprocessing
-        last_prep_run = get_last_run(
-            experiment_id, "Data_Preprocessing", logger)
+        if not DATA_RUN_ID:
+            # get last finished run for data preprocessing
+            data_run = get_last_run(
+                experiment_id, "Data_Preprocessing", logger)
+        else:
+            # get data preprocessing run with specified run id
+            data_run = get_run_by_id(
+                experiment_id, DATA_RUN_ID, logger)
 
         # download train and test data from last run
         tmpdir_path = PROJECT_ROOT / "tmp"
         tmpdir_path.mkdir(exist_ok=True, parents=True)
         train = load_logged_data(
-            run_id=last_prep_run["run_id"],
+            run_id=data_run["run_id"],
             tmp_path=tmpdir_path,
             dataset_name="train",
             logger=logger,
@@ -61,7 +69,7 @@ if __name__ == "__main__":
             context="training"
         )
         test = load_logged_data(
-            run_id=last_prep_run["run_id"],
+            run_id=data_run["run_id"],
             tmp_path=tmpdir_path,
             dataset_name="test",
             logger=logger,
