@@ -1,16 +1,18 @@
 import os
 import tempfile
+from io import StringIO
 from pathlib import Path
 from typing import Union
 
-# import dvc.api
+import dvc.api
 import joblib
 import mlflow
+import mlflow.data.sources
 import pandas as pd
 from loguru._logger import Logger
 from xgboost import Booster, XGBClassifier
 
-from config.core import config
+from config.core import PROJECT_ROOT, config
 
 
 def get_last_run(experiment_id: str, run_name: str,
@@ -159,11 +161,54 @@ def log_xgboost_model(
     )
 
 
-# def load_versioned_data():
+def load_versioned_data(
+    run_id: str,
+    remote_name: str,
+    file_dir: str,
+    dataset_name: str,
+    logger: Logger,
+    log_usage: bool = False,
+    **log_usage_kwargs
+) -> pd.DataFrame:
 
-#     with dvc.api.open(
-#             path=,
-#             rev="v1",
-#             remote=,
-#             remote_config=) as f:
-#     ...
+    run = mlflow.get_run(run_id)
+    git_revision = run.data.tags["dataset_version"]
+    dataset_input = [dsi for dsi in run.inputs.dataset_inputs
+                     if dsi.dataset.name == dataset_name][0]
+    dataset_source = mlflow.data.get_source(dataset_input)
+    # dataset_source = dataset_input.dataset.source
+    # dataset_source = dvc.api.get_url(
+    #     repo=str(PROJECT_ROOT),
+    #     path=os.path.join(
+    #         file_dir,
+    #         f"{dataset_name}.{config.project.datasets_file_format}"),
+    #     rev=git_rev,
+    #     remote=remote_name,
+    #     remote_config=config.storage.model_dump()
+    # )
+
+    contents = dvc.api.read(
+        repo=str(PROJECT_ROOT),
+        path=os.path.join(
+            file_dir,
+            f"{dataset_name}.{config.project.datasets_file_format}"),
+        rev=git_revision,  # HEAD if None
+        remote=remote_name,
+        remote_config=config.storage.model_dump(),
+        mode="r"  # rb
+    )
+    data = pd.read_csv(StringIO(contents))  # BytesIO
+
+    logger.info(f"Dataset {dataset_name} loaded into memory")
+
+    if log_usage:
+        dataset = mlflow.data.from_pandas(
+            data,
+            name=dataset_input.dataset.name,
+            targets=log_usage_kwargs["targets"],
+            source=dataset_source,
+            digest=dataset_input.dataset.digest
+        )
+        mlflow.log_input(dataset, context=log_usage_kwargs["context"])
+
+    return data

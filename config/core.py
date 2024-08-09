@@ -26,6 +26,7 @@ class ProjectConfig(BaseModel):
 
 
 class StorageConfig(BaseModel):
+    url: str
     endpointurl: str
     region: str
     access_key_id: str
@@ -85,6 +86,7 @@ def fetch_config_from_dotenv(
     if cfg_path:
         env_vars = dotenv_values(cfg_path)
         parsed_config = {
+            "url": env_vars["DVC_REMOTE_URL"],
             "endpointurl": env_vars["AWS_ENDPOINT_URL"],
             "region": env_vars["AWS_DEFAULT_REGION"],
             "access_key_id": env_vars["AWS_ACCESS_KEY_ID"],
