@@ -3,6 +3,9 @@ tracking_server_uri: http://127.0.0.1:3080
 artifacts_destination: s3://gor0h-ml/mlflow_test/
 artifacts_datasets_dir: datasets
 logging_precision: 5
+train_dataset_name: train
+test_dataset_name: test
+datasets_file_format: csv
 
 # Model related
 model_save_dir: models

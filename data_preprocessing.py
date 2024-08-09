@@ -31,9 +31,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--test-size",
-        # задание значения default опционально, если скрипт будет вызываться
-        # только через mlflow run, т.к. значение по-умолчанию уже задано в
-        # секции parameters
         default=config.model.default_test_size,
         type=float
     )
@@ -71,32 +68,36 @@ if __name__ == "__main__":
     train = X_train.assign(target=y_train)
     mlflow.log_text(
         train.to_csv(index=False),
-        f"{config.project.artifacts_datasets_dir}/train.csv"  # will be logged into experiment_id/run_id/artifacts/datasets  # noqa
+        f"{config.project.artifacts_datasets_dir}/{config.project.train_dataset_name}.csv"  # will be logged into experiment_id/run_id/artifacts/datasets  # noqa
     )
     dataset_source_link = mlflow.get_artifact_uri(
-        f"{config.project.artifacts_datasets_dir}/train.csv").replace(  # noqa
-            "mlflow-artifacts:/",
-            config.project.artifacts_destination
-        )  # mlflow-artifacts:/experiment_id/run_id/artifacts/datasets/train.csv throws an error  # noqa
+        f"{config.project.artifacts_datasets_dir}/{config.project.train_dataset_name}.csv"  # noqa
+    ).replace(
+        "mlflow-artifacts:/",
+        config.project.artifacts_destination
+    )  # mlflow-artifacts:/experiment_id/run_id/artifacts/datasets/train.csv throws an error  # noqa
     dataset = mlflow.data.from_pandas(
         train,
-        name="train",
+        name=config.project.train_dataset_name,
         targets="target",
         source=dataset_source_link  # можно указать путь к файлу (в т.ч. в s3)
     )
     mlflow.log_input(dataset, context="preprocessing")
 
     test = X_test.assign(target=y_test)
-    mlflow.log_text(test.to_csv(index=False),
-                    f"{config.project.artifacts_datasets_dir}/test.csv")
+    mlflow.log_text(
+        test.to_csv(index=False),
+        f"{config.project.artifacts_datasets_dir}/{config.project.test_dataset_name}.csv"  # noqa
+    )
     dataset_source_link = mlflow.get_artifact_uri(
-        f"{config.project.artifacts_datasets_dir}/test.csv").replace(  # noqa
-            "mlflow-artifacts:/",
-            config.project.artifacts_destination
-        )
+        f"{config.project.artifacts_datasets_dir}/{config.project.test_dataset_name}.csv"  # noqa
+    ).replace(
+        "mlflow-artifacts:/",
+        config.project.artifacts_destination
+    )
     dataset = mlflow.data.from_pandas(
         test,
-        name="test",
+        name=config.project.test_dataset_name,
         targets="target",
         source=dataset_source_link
     )

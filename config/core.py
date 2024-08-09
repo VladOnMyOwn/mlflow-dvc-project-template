@@ -18,6 +18,9 @@ class ProjectConfig(BaseModel):
     tracking_server_uri: str
     artifacts_datasets_dir: str
     logging_precision: int
+    train_dataset_name: str
+    test_dataset_name: str
+    datasets_file_format: str
 
 
 class ModelConfig(BaseModel):

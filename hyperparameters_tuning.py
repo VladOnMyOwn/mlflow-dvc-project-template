@@ -132,7 +132,7 @@ if __name__ == "__main__":
         train = load_logged_data(
             run_id=data_run["run_id"],
             tmp_path=tmpdir_path,
-            dataset_name="train",
+            dataset_name=config.project.train_dataset_name,
             logger=logger,
             dst_dir=config.project.artifacts_datasets_dir,
             log_usage=True,
