@@ -6,6 +6,8 @@ logging_precision: 5
 train_dataset_name: train
 test_dataset_name: test
 datasets_file_format: csv
+dvc_remote_name: str
+local_datasets_dir: data
 
 # Model related
 model_save_dir: models

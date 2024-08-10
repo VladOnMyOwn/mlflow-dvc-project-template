@@ -23,6 +23,8 @@ class ProjectConfig(BaseModel):
     train_dataset_name: str
     test_dataset_name: str
     datasets_file_format: str
+    dvc_remote_name: str
+    local_datasets_dir: str
 
 
 class StorageConfig(BaseModel):
@@ -114,4 +116,4 @@ def create_and_validate_config(
 
 
 config = create_and_validate_config()
-print(config.storage.__repr__())
+

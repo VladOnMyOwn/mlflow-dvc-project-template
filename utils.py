@@ -163,10 +163,10 @@ def log_xgboost_model(
 
 def load_versioned_data(
     run_id: str,
-    remote_name: str,
-    file_dir: str,
     dataset_name: str,
     logger: Logger,
+    # file_dir: str = config.project.local_datasets_dir,
+    remote_name: str = config.project.dvc_remote_name,
     log_usage: bool = False,
     **log_usage_kwargs
 ) -> pd.DataFrame:
@@ -175,23 +175,24 @@ def load_versioned_data(
     git_revision = run.data.tags["dataset_version"]
     dataset_input = [dsi for dsi in run.inputs.dataset_inputs
                      if dsi.dataset.name == dataset_name][0]
-    dataset_source = mlflow.data.get_source(dataset_input)
-    # dataset_source = dataset_input.dataset.source
+    # dataset_source = mlflow.data.get_source(dataset_input)
+    dataset_source = dataset_input.dataset.source
     # dataset_source = dvc.api.get_url(
     #     repo=str(PROJECT_ROOT),
     #     path=os.path.join(
     #         file_dir,
     #         f"{dataset_name}.{config.project.datasets_file_format}"),
-    #     rev=git_rev,
+    #     rev=git_revision,
     #     remote=remote_name,
     #     remote_config=config.storage.model_dump()
     # )
 
+    # в dataset_source писать путь файла в локальной системе, который
+    # далее передается в dvc.api.read как параметр аргумента path
+
     contents = dvc.api.read(
         repo=str(PROJECT_ROOT),
-        path=os.path.join(
-            file_dir,
-            f"{dataset_name}.{config.project.datasets_file_format}"),
+        path=dataset_source,  # os.path.join(file_dir,f"{dataset_name}.{config.project.datasets_file_format}")  # noqa
         rev=git_revision,  # HEAD if None
         remote=remote_name,
         remote_config=config.storage.model_dump(),
@@ -210,5 +211,6 @@ def load_versioned_data(
             digest=dataset_input.dataset.digest
         )
         mlflow.log_input(dataset, context=log_usage_kwargs["context"])
+        # добавить тег версии данных
 
     return data
