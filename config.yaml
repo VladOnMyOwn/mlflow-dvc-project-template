@@ -1,7 +1,5 @@
 # Project related
 tracking_uri: http://127.0.0.1:3080
-# artifacts_destination: s3://gor0h-ml/mlflow_test/  # if logging datasets like artifacts
-# artifacts_datasets_dir: datasets  # if logging datasets like artifacts
 logging_precision: 5
 train_dataset_name: train
 test_dataset_name: test
