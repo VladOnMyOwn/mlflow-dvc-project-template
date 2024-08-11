@@ -37,11 +37,11 @@ if __name__ == "__main__":
     mlflow.xgboost.autolog(
         importance_types=config.model.importance_types,
         log_datasets=False,  # will be logged manually for better control
-        log_models=False  # will be logged manually for better control
+        log_models=False  # will be logged manually for better control  # TODO: попробовать True для лоигрования графиков  # noqa
     )
     mlflow.sklearn.autolog(
         log_datasets=False,
-        log_models=False,
+        log_models=False,  # TODO: попробовать True для лоигрования графиков  # noqa
         serialization_format=mlflow.sklearn.SERIALIZATION_FORMAT_CLOUDPICKLE
     )
     # for more: https://mlflow.org/docs/latest/python_api/mlflow.xgboost.html#mlflow.xgboost.autolog  # noqa
