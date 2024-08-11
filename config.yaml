@@ -1,5 +1,5 @@
 # Project related
-tracking_server_uri: http://127.0.0.1:3080
+tracking_uri: http://127.0.0.1:3080
 # artifacts_destination: s3://gor0h-ml/mlflow_test/  # if logging datasets like artifacts
 # artifacts_datasets_dir: datasets  # if logging datasets like artifacts
 logging_precision: 5
@@ -13,10 +13,10 @@ local_datasets_dir: data
 save_dir: models
 name: breast_cancer_xgb
 type_: classifier  # classifier/regressor/question-answering/text-summarization/text/retriever
-champion_model_alias: champion
+champion_alias: champion
 load_by_alias: False
-mlflow_model_save_format: xgb
-local_model_save_format: ubj
+mlflow_save_format: xgb
+local_save_format: ubj
 target_name: target
 default_test_size: 0.33  # specified in MLproject
 params_tuning_n_trials: 10  # specified in MLproject

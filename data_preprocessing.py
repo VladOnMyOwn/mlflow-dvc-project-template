@@ -45,7 +45,7 @@ if __name__ == "__main__":
 
     logger.info(f"Data preprocessing started with test size: {TEST_SIZE}")
 
-    mlflow.set_tracking_uri(config.project.tracking_server_uri)
+    mlflow.set_tracking_uri(config.project.tracking_uri)
 
     # download cancer dataset
     X, y = get_cancer_df()

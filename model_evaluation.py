@@ -26,7 +26,7 @@ if __name__ == "__main__":
 
     logger.info("Evaluation started")
 
-    mlflow.set_tracking_uri(config.project.tracking_server_uri)
+    mlflow.set_tracking_uri(config.project.tracking_uri)
 
     with mlflow.start_run() as run:
 
@@ -40,7 +40,7 @@ if __name__ == "__main__":
 
         model_uri = f"models:/{config.model.name + '_sklearn'}"
         if config.model.load_by_alias:
-            model_uri += f"@{config.model.champion_model_alias}"
+            model_uri += f"@{config.model.champion_alias}"
         else:
             latest_version = mlflow.MlflowClient().get_registered_model(
                 config.model.name + '_sklearn').latest_versions[0].version  # noqa

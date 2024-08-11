@@ -17,7 +17,7 @@ STORAGE_CONFIG_FILE_PATH = PROJECT_ROOT / ".env"
 
 class ProjectConfig(BaseModel):
     # artifacts_destination: str
-    tracking_server_uri: str
+    tracking_uri: str
     # artifacts_datasets_dir: str
     logging_precision: int
     train_dataset_name: str
@@ -39,10 +39,10 @@ class ModelConfig(BaseModel):
     save_dir: str
     name: str
     type_: str
-    champion_model_alias: str
+    champion_alias: str
     load_by_alias: bool
-    mlflow_model_save_format: str
-    local_model_save_format: str
+    mlflow_save_format: str
+    local_save_format: str
     default_test_size: float
     params_tuning_n_trials: int
     target_name: str

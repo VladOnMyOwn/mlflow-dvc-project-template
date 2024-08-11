@@ -111,7 +111,7 @@ if __name__ == "__main__":
 
     logger.info(f"Hyperparameters tuning started with {N_TRIALS} trials")
 
-    mlflow.set_tracking_uri(config.project.tracking_server_uri)
+    mlflow.set_tracking_uri(config.project.tracking_uri)
 
     with mlflow.start_run(log_system_metrics=True) as run:
 

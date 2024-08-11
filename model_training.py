@@ -33,7 +33,7 @@ if __name__ == "__main__":
 
     logger.info("Model training started")
 
-    mlflow.set_tracking_uri(config.project.tracking_server_uri)
+    mlflow.set_tracking_uri(config.project.tracking_uri)
     mlflow.xgboost.autolog(
         importance_types=config.model.importance_types,
         log_datasets=False,  # will be logged manually for better control
@@ -146,9 +146,9 @@ if __name__ == "__main__":
             prediction_example=predictions_example.to_json(
                 orient="split", index=False),
             model_name=config.model.name,
-            model_alias=config.model.champion_model_alias,
-            mlflow_model_save_format=config.model.mlflow_model_save_format,
-            local_model_save_format=config.model.local_model_save_format,
+            model_alias=config.model.champion_alias,
+            mlflow_model_save_format=config.model.mlflow_save_format,
+            local_model_save_format=config.model.local_save_format,
             local_models_path=local_models_path
         )
 
@@ -170,9 +170,9 @@ if __name__ == "__main__":
             prediction_example=predictions_example.to_json(
                 orient="split", index=False),
             model_name=config.model.name,
-            model_alias=config.model.champion_model_alias,
-            mlflow_model_save_format=config.model.mlflow_model_save_format,
-            local_model_save_format=config.model.local_model_save_format,
+            model_alias=config.model.champion_alias,
+            mlflow_model_save_format=config.model.mlflow_save_format,
+            local_model_save_format=config.model.local_save_format,
             local_models_path=local_models_path,
             model_name_suffix="_sklearn"
         )
