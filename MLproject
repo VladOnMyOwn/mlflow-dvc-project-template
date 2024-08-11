@@ -6,19 +6,23 @@ entry_points:
     data-preprocessing:
         parameters:
             test-size: {type: float, default: 0.33}  # Short syntax
-        command: "python data_preprocessing.py --test-size {test-size}"
+            dvc-rev: {type: str, default: "v1.0"}
+            dvc-message: {type: str, default: ""}
+        command: "python data_preprocessing.py --test-size {test-size} --dvc-rev {dvc-rev} --dvc-message {dvc-message}"
     hyperparameters-tuning:
         parameters:
             data-run-id: {type: str, default: ""}
+            data-version: {type: str, default: ""}
             n-trials:  # Long syntax
                 type: int
                 default: 10
-        command: "python hyperparameters_tuning.py --data-run-id {data-run-id} --n-trials {n-trials}"
+        command: "python hyperparameters_tuning.py --data-run-id {data-run-id} --n-trials {n-trials} --data-version {data-version}"
     model-training:
         parameters:
             data-run-id: {type: str, default: ""}
+            data-version: {type: str, default: ""}
             tuning-run-id: {type: str, default: ""}
-        command: "python model_training.py --data-run-id {data-run-id} --tuning-run-id {tuning-run-id}"
+        command: "python model_training.py --data-run-id {data-run-id} --tuning-run-id {tuning-run-id} --data-version {data-version}"
     model-evaluation:
         parameters:
             eval-dataset: str  # Specifying just the data type

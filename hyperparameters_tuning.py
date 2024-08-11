@@ -10,11 +10,10 @@ import xgboost as xgb
 from loguru import logger
 from xgboost.callback import TrainingCallback
 
-from config.core import PROJECT_ROOT, config
-from utils import get_last_run, get_run_by_id, load_logged_data
+from config.core import config
+from utils import get_last_run, get_run_by_id, load_versioned_data
 
 
-# set up logging
 warnings.filterwarnings("ignore")
 logging.getLogger("mlflow").setLevel(logging.ERROR)
 logger.remove()
@@ -102,10 +101,12 @@ if __name__ == "__main__":
     # get arguments if running not in ipykernel
     parser = argparse.ArgumentParser()
     parser.add_argument("--data-run-id", default="", type=str)
+    parser.add_argument("--data-version", default="", type=str)
     parser.add_argument(
         "--n-trials", default=config.model.params_tuning_n_trials, type=int)
     cmd_args = parser.parse_args()
     DATA_RUN_ID = cmd_args.data_run_id
+    DVC_REVISION = cmd_args.data_version
     N_TRIALS = cmd_args.n_trials
 
     logger.info(f"Hyperparameters tuning started with {N_TRIALS} trials")
@@ -119,22 +120,23 @@ if __name__ == "__main__":
 
         if not DATA_RUN_ID:
             # get last finished run for data preprocessing
-            data_run = get_last_run(
-                experiment_id, "Data_Preprocessing", logger)
+            if not DVC_REVISION:
+                data_run = get_last_run(
+                    experiment_id, "Data_Preprocessing", logger)
+            else:
+                # filter by dataset_version tag
+                data_run = get_last_run(
+                    experiment_id, "Data_Preprocessing", logger,
+                    dataset_version=DVC_REVISION)
         else:
             # get data preprocessing run with specified run id
             data_run = get_run_by_id(
                 experiment_id, DATA_RUN_ID, logger)
 
-        # download train data from last run
-        tmpdir_path = PROJECT_ROOT / "tmp"
-        tmpdir_path.mkdir(exist_ok=True, parents=True)
-        train = load_logged_data(
+        train = load_versioned_data(
             run_id=data_run["run_id"],
-            tmp_path=tmpdir_path,
             dataset_name=config.project.train_dataset_name,
             logger=logger,
-            dst_dir=config.project.artifacts_datasets_dir,
             log_usage=True,
             targets=config.model.target_name,
             context="finetuning"

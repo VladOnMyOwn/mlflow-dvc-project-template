@@ -1,5 +1,6 @@
 __pycache__/
 tmp/
-data/
 models/
 .env
+data/*
+!data/*.dvc

@@ -9,11 +9,10 @@ import xgboost as xgb
 from loguru import logger
 
 from config.core import PROJECT_ROOT, config
-from utils import (get_last_run, get_run_by_id, load_logged_data,
+from utils import (get_last_run, get_run_by_id, load_versioned_data,
                    log_xgboost_model)
 
 
-# set up logging
 warnings.filterwarnings("ignore")
 logging.getLogger("mlflow").setLevel(logging.ERROR)
 logger.remove()
@@ -26,8 +25,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--data-run-id", default="", type=str)
     parser.add_argument("--tuning-run-id", default="", type=str)
+    parser.add_argument("--data-version", default="", type=str)
     cmd_args = parser.parse_args()
     DATA_RUN_ID = cmd_args.data_run_id
+    DVC_REVISION = cmd_args.data_version
     PARAMS_RUN_ID = cmd_args.tuning_run_id
 
     logger.info("Model training started")
@@ -49,32 +50,32 @@ if __name__ == "__main__":
 
         if not DATA_RUN_ID:
             # get last finished run for data preprocessing
-            data_run = get_last_run(
-                experiment_id, "Data_Preprocessing", logger)
+            if not DVC_REVISION:
+                data_run = get_last_run(
+                    experiment_id, "Data_Preprocessing", logger)
+            else:
+                # filter by dataset_version tag
+                data_run = get_last_run(
+                    experiment_id, "Data_Preprocessing", logger,
+                    dataset_version=DVC_REVISION)
         else:
             # get data preprocessing run with specified run id
             data_run = get_run_by_id(
                 experiment_id, DATA_RUN_ID, logger)
 
-        # download train and test data from last run
-        tmpdir_path = PROJECT_ROOT / "tmp"
-        tmpdir_path.mkdir(exist_ok=True, parents=True)
-        train = load_logged_data(
+        # download train and test data
+        train = load_versioned_data(
             run_id=data_run["run_id"],
-            tmp_path=tmpdir_path,
             dataset_name=config.project.train_dataset_name,
             logger=logger,
-            dst_dir=config.project.artifacts_datasets_dir,
             log_usage=True,
             targets=config.model.target_name,
             context="training"
         )
-        test = load_logged_data(
+        test = load_versioned_data(
             run_id=data_run["run_id"],
-            tmp_path=tmpdir_path,
             dataset_name=config.project.test_dataset_name,
             logger=logger,
-            dst_dir=config.project.artifacts_datasets_dir,
             log_usage=True,
             targets=config.model.target_name,
             context="testing"
@@ -104,7 +105,11 @@ if __name__ == "__main__":
         params = {
             col.split(".")[1]: tuning_run[col]
             for col in tuning_run.index if (
-                ("params" in col) and ("n-trials" not in col))
+                ("params" in col) and (all(
+                    p not in col
+                    for p in ["n-trials", "data-run-id", "data-version"]
+                ))
+            )
         }
         params.update(eval_metric=config.model.params_eval_metrics)
 

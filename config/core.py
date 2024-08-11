@@ -16,9 +16,9 @@ STORAGE_CONFIG_FILE_PATH = PROJECT_ROOT / ".env"
 
 
 class ProjectConfig(BaseModel):
-    artifacts_destination: str
+    # artifacts_destination: str
     tracking_server_uri: str
-    artifacts_datasets_dir: str
+    # artifacts_datasets_dir: str
     logging_precision: int
     train_dataset_name: str
     test_dataset_name: str
@@ -116,4 +116,3 @@ def create_and_validate_config(
 
 
 config = create_and_validate_config()
-

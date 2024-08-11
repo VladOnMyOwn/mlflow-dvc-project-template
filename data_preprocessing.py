@@ -1,6 +1,8 @@
 import argparse
+import os
 import sys
 import warnings
+from pathlib import Path
 
 import mlflow
 import pandas as pd
@@ -8,10 +10,10 @@ from loguru import logger
 from sklearn import datasets
 from sklearn.model_selection import train_test_split
 
-from config.core import config
+from config.core import PROJECT_ROOT, config
+from utils import create_data_version
 
 
-# set up logging
 warnings.filterwarnings("ignore")
 logger.remove()
 logger.add(
@@ -34,7 +36,12 @@ if __name__ == "__main__":
         default=config.model.default_test_size,
         type=float
     )
-    TEST_SIZE = parser.parse_args().test_size
+    parser.add_argument("--dvc-rev", default="v1.0", type=str)
+    parser.add_argument("--dvc-message", default="", type=str)
+    cmd_args = parser.parse_args()
+    TEST_SIZE = cmd_args.test_size
+    DVC_REVISION = cmd_args.dvc_rev
+    DVC_MESSAGE = cmd_args.dvc_message
 
     logger.info(f"Data preprocessing started with test size: {TEST_SIZE}")
 
@@ -66,60 +73,44 @@ if __name__ == "__main__":
 
     # log and register datasets
     train = X_train.assign(**{config.model.target_name: y_train})
-    mlflow.log_text(
-        train.to_csv(index=False),
-        "{}/{}.{}".format(
-            config.project.artifacts_datasets_dir,
-            config.project.train_dataset_name,
-            config.project.datasets_file_format
-        )  # will be logged into experiment_id/run_id/artifacts/datasets
+    dataset_src = os.path.join(
+        PROJECT_ROOT,
+        config.project.local_datasets_dir,
+        f"{config.project.train_dataset_name}.{config.project.datasets_file_format}"  # noqa
     )
-    # вместо этого можно делать log_artifact для любого формата файла, но
-    # не желательно, т.к. данные будут дублироваться для каждого запуска
-    # или записывать файл в удаленное/локальное хранилище
-    dataset_source_link = mlflow.get_artifact_uri(
-        "{}/{}.{}".format(
-            config.project.artifacts_datasets_dir,
-            config.project.train_dataset_name,
-            config.project.datasets_file_format
-        )
-    ).replace(
-        "mlflow-artifacts:/",
-        config.project.artifacts_destination
-    )  # mlflow-artifacts:/experiment_id/run_id/artifacts/datasets/train.csv throws an error  # noqa
+    train.to_csv(dataset_src, index=False)
     dataset = mlflow.data.from_pandas(
         train,
         name=config.project.train_dataset_name,
         targets=config.model.target_name,
-        source=dataset_source_link  # можно указать путь к файлу (в т.ч. в s3)
+        source=Path(dataset_src).as_uri()
     )
     mlflow.log_input(dataset, context="preprocessing")
 
     test = X_test.assign(**{config.model.target_name: y_test})
-    mlflow.log_text(
-        test.to_csv(index=False),
-        "{}/{}.{}".format(
-            config.project.artifacts_datasets_dir,
-            config.project.test_dataset_name,
-            config.project.datasets_file_format
-        )
+    dataset_src = os.path.join(
+        PROJECT_ROOT,
+        config.project.local_datasets_dir,
+        f"{config.project.test_dataset_name}.{config.project.datasets_file_format}"  # noqa
     )
-    dataset_source_link = mlflow.get_artifact_uri(
-        "{}/{}.{}".format(
-            config.project.artifacts_datasets_dir,
-            config.project.test_dataset_name,
-            config.project.datasets_file_format
-        )
-    ).replace(
-        "mlflow-artifacts:/",
-        config.project.artifacts_destination
-    )
+    test.to_csv(dataset_src, index=False)
     dataset = mlflow.data.from_pandas(
         test,
         name=config.project.test_dataset_name,
         targets=config.model.target_name,
-        source=dataset_source_link
+        source=Path(dataset_src).as_uri()
     )
     mlflow.log_input(dataset, context="preprocessing")
 
-    logger.info("Data preprocessing finished")
+    create_data_version(
+        dataset_names=[
+            config.project.train_dataset_name,
+            config.project.test_dataset_name
+        ],
+        version=DVC_REVISION,
+        commit_message=DVC_MESSAGE,
+        logger=logger,
+        force_version=True
+    )
+
+    logger.success("Data preprocessing finished")
