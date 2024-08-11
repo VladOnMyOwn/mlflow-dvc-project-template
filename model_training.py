@@ -10,7 +10,7 @@ from loguru import logger
 
 from config.core import PROJECT_ROOT, config
 from utils import (get_last_run, get_run_by_id, load_versioned_data,
-                   log_xgboost_model)
+                   log_sklearn_model, log_xgboost_model)
 
 
 warnings.filterwarnings("ignore")
@@ -37,7 +37,12 @@ if __name__ == "__main__":
     mlflow.xgboost.autolog(
         importance_types=config.model.importance_types,
         log_datasets=False,  # will be logged manually for better control
-        log_models=False,  # will be logged manually for better control
+        log_models=False  # will be logged manually for better control
+    )
+    mlflow.sklearn.autolog(
+        log_datasets=False,
+        log_models=False,
+        serialization_format=mlflow.sklearn.SERIALIZATION_FORMAT_CLOUDPICKLE
     )
     # for more: https://mlflow.org/docs/latest/python_api/mlflow.xgboost.html#mlflow.xgboost.autolog  # noqa
 
@@ -147,8 +152,8 @@ if __name__ == "__main__":
                 orient="split", index=False),
             model_name=config.model.name,
             model_alias=config.model.champion_alias,
-            mlflow_model_save_format=config.model.mlflow_save_format,
-            local_model_save_format=config.model.local_save_format,
+            mlflow_save_format=config.model.mlflow_save_format,
+            local_save_format=config.model.local_save_format,
             local_models_path=local_models_path
         )
 
@@ -163,7 +168,7 @@ if __name__ == "__main__":
             skl_model.predict_proba(input_example)[:, 1],
             columns=["predictions"]
         )
-        log_xgboost_model(
+        log_sklearn_model(
             skl_model,
             artifact_path="sklearn",
             input_example=input_example,
@@ -171,8 +176,6 @@ if __name__ == "__main__":
                 orient="split", index=False),
             model_name=config.model.name,
             model_alias=config.model.champion_alias,
-            mlflow_model_save_format=config.model.mlflow_save_format,
-            local_model_save_format=config.model.local_save_format,
             local_models_path=local_models_path,
             model_name_suffix="_sklearn"
         )

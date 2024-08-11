@@ -13,8 +13,10 @@ name: breast_cancer_xgb
 type_: classifier  # classifier/regressor/question-answering/text-summarization/text/retriever
 champion_alias: champion
 load_by_alias: False
-mlflow_save_format: xgb
-local_save_format: ubj
+mlflow_save_format: xgb  # non-sklearn libraries
+local_save_format: ubj  # non-sklearn libraries
+sklearn_save_format: pkl
+sklearn_predict_fn: predict_proba  # predict/predict_proba/predict_log_proba/predict_joint_log_proba/score
 target_name: target
 default_test_size: 0.33  # specified in MLproject
 params_tuning_n_trials: 10  # specified in MLproject
