@@ -36,9 +36,9 @@ class StorageConfig(BaseModel):
 
 
 class ModelConfig(BaseModel):
-    model_save_dir: str
-    model_name: str
-    model_type: str
+    save_dir: str
+    name: str
+    type_: str
     champion_model_alias: str
     load_by_alias: bool
     mlflow_model_save_format: str

@@ -130,7 +130,7 @@ if __name__ == "__main__":
         logger.info("Best iteration test_{}: {}".format(
             config.model.params_tuning_metric, model.best_score))
 
-        local_models_path = PROJECT_ROOT / config.model.model_save_dir
+        local_models_path = PROJECT_ROOT / config.model.save_dir
         local_models_path.mkdir(exist_ok=True, parents=True)
 
         # log and register model
@@ -145,7 +145,7 @@ if __name__ == "__main__":
             input_example=input_example,
             prediction_example=predictions_example.to_json(
                 orient="split", index=False),
-            model_name=config.model.model_name,
+            model_name=config.model.name,
             model_alias=config.model.champion_model_alias,
             mlflow_model_save_format=config.model.mlflow_model_save_format,
             local_model_save_format=config.model.local_model_save_format,
@@ -169,7 +169,7 @@ if __name__ == "__main__":
             input_example=input_example,
             prediction_example=predictions_example.to_json(
                 orient="split", index=False),
-            model_name=config.model.model_name,
+            model_name=config.model.name,
             model_alias=config.model.champion_model_alias,
             mlflow_model_save_format=config.model.mlflow_model_save_format,
             local_model_save_format=config.model.local_model_save_format,

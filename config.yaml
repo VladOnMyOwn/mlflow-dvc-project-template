@@ -10,9 +10,9 @@ dvc_remote_name: s3_repo
 local_datasets_dir: data
 
 # Model related
-model_save_dir: models
-model_name: breast_cancer_xgb
-model_type: classifier  # classifier/regressor/question-answering/text-summarization/text/retriever
+save_dir: models
+name: breast_cancer_xgb
+type_: classifier  # classifier/regressor/question-answering/text-summarization/text/retriever
 champion_model_alias: champion
 load_by_alias: False
 mlflow_model_save_format: xgb

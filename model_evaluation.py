@@ -38,17 +38,17 @@ if __name__ == "__main__":
         )
         # mlflow.log_input(eval_dataset, context="evaluation")  # will be logged by .evaluate method  # noqa
 
-        model_uri = f"models:/{config.model.model_name + '_sklearn'}"
+        model_uri = f"models:/{config.model.name + '_sklearn'}"
         if config.model.load_by_alias:
             model_uri += f"@{config.model.champion_model_alias}"
         else:
             latest_version = mlflow.MlflowClient().get_registered_model(
-                config.model.model_name + '_sklearn').latest_versions[0].version  # noqa
+                config.model.name + '_sklearn').latest_versions[0].version  # noqa
             model_uri += f"/{latest_version}"
 
         mlflow.evaluate(
             model=model_uri,
-            model_type=config.model.model_type,
+            model_type=config.model.type_,
             data=eval_dataset,
             dataset_path=eval_dataset_src,
             evaluator_config={"pos_label": 1},
