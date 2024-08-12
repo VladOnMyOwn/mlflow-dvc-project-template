@@ -176,10 +176,11 @@ if __name__ == "__main__":
             test_predicitions,
             n_bins=5
         )
-        mlflow.log_figure(rel_curve_fig, "test_calibration_curve.png")
+        if rel_curve_fig is not None:
+            mlflow.log_figure(rel_curve_fig, "test_calibration_curve.png")
 
         # TODO: add logging custom artifacts:
-        # ROC plot, PRC plot, calibration curve
+        # probability distribution plot
 
         # log and register model as sklearn compatible classifier
         params.update(num_boost_round=model.best_iteration)
