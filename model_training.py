@@ -171,13 +171,13 @@ if __name__ == "__main__":
             test_predicitions
         )
         mlflow.log_figure(pr_curve_fig, "test_pr_curve.png")
-        rel_curve_fig = plot_reliability_curve(
+        calibr_curve_fig = plot_reliability_curve(
             test[config.model.target_name].values,
             test_predicitions,
             n_bins=5
         )
-        if rel_curve_fig is not None:
-            mlflow.log_figure(rel_curve_fig, "test_calibration_curve.png")
+        if calibr_curve_fig is not None:
+            mlflow.log_figure(calibr_curve_fig, "test_calibration_curve.png")
 
         # TODO: add logging custom artifacts:
         # probability distribution plot
