@@ -10,7 +10,8 @@ from loguru import logger
 
 from config.core import PROJECT_ROOT, config
 from utils.logging import log_sklearn_model, log_xgboost_model
-from utils.metrics import plot_pr_curve, plot_reliability_curve, plot_roc_curve
+from utils.metrics import (plot_pr_curve, plot_proba_distribution,
+                           plot_reliability_curve, plot_roc_curve)
 from utils.processing import load_versioned_data
 from utils.runs import get_last_run, get_run_by_id
 
@@ -178,9 +179,10 @@ if __name__ == "__main__":
         )
         if calibr_curve_fig is not None:
             mlflow.log_figure(calibr_curve_fig, "test_calibration_curve.png")
+        probs_dist_fig = plot_proba_distribution(test_predicitions)
+        mlflow.log_figure(probs_dist_fig, "test_probability_distribution.png")
 
-        # TODO: add logging custom artifacts:
-        # probability distribution plot
+        # TODO: add logging custom artifacts
 
         # log and register model as sklearn compatible classifier
         params.update(num_boost_round=model.best_iteration)

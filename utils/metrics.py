@@ -3,6 +3,7 @@ from typing import List, Optional, Tuple, Union
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
 from matplotlib.figure import Figure
 from scipy.stats import binomtest
 from sklearn.metrics import auc, precision_recall_curve, roc_curve
@@ -158,6 +159,30 @@ def plot_reliability_curve(
 
     ax.legend()
     plt.tight_layout()
+
+    plt.close(fig)
+
+    return fig
+
+
+def plot_proba_distribution(
+    y_proba: np.ndarray,
+    n_bins: int = 20,
+    figsize: Tuple[int, int] = (12, 5)
+) -> Figure:
+
+    fig, ax = plt.subplots(1, 2)
+    fig.set_figwidth(figsize[0])
+    fig.set_figheight(figsize[1])
+
+    sns.distplot(y_proba, hist=True, bins=n_bins,
+                 kde=True, color="darkblue", ax=ax[0])
+    sns.ecdfplot(y_proba, stat="proportion", ax=ax[1])
+
+    ax[0].set_title("Probability distribution")
+    ax[1].set_title("Cumulative probability distribution")
+    ax[0].set_xlabel("Predicted probs")
+    ax[1].set_xlabel("Predicted probs")
 
     plt.close(fig)
 
