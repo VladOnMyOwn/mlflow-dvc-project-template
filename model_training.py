@@ -10,7 +10,7 @@ from loguru import logger
 
 from config.core import PROJECT_ROOT, config
 from utils.logging import log_sklearn_model, log_xgboost_model
-from utils.metrics import plot_pr_curve, plot_roc_curve
+from utils.metrics import plot_pr_curve, plot_reliability_curve, plot_roc_curve
 from utils.processing import load_versioned_data
 from utils.runs import get_last_run, get_run_by_id
 
@@ -171,6 +171,12 @@ if __name__ == "__main__":
             test_predicitions
         )
         mlflow.log_figure(pr_curve_fig, "test_pr_curve.png")
+        rel_curve_fig = plot_reliability_curve(
+            test[config.model.target_name].values,
+            test_predicitions,
+            n_bins=5
+        )
+        mlflow.log_figure(rel_curve_fig, "test_calibration_curve.png")
 
         # TODO: add logging custom artifacts:
         # ROC plot, PRC plot, calibration curve

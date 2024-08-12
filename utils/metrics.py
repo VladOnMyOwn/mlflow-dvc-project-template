@@ -1,9 +1,10 @@
-from typing import List, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure
+from scipy.stats import binomtest
 from sklearn.metrics import auc, precision_recall_curve, roc_curve
 from sklearn.utils import resample
 
@@ -89,6 +90,71 @@ def plot_pr_curve(
     ax.set_title("PR curve")
     ax.set_xlabel("Recall")
     ax.set_ylabel("Precision")
+
+    ax.legend()
+    plt.tight_layout()
+
+    plt.close(fig)
+
+    return fig
+
+
+def plot_reliability_curve(
+    y_true: np.ndarray,
+    y_proba: np.ndarray,
+    n_bins: int = 8,
+    plot_ci: bool = True,
+    figsize: Tuple[int, int] = (12, 5)
+) -> Optional[Figure]:
+
+    y_true = pd.Series(y_true)
+
+    while n_bins > 1:
+        try:
+            pred_probs_space = np.linspace(
+                y_proba.min(), y_proba.max(), n_bins + 1)
+
+            empirical_probs = []
+            pred_probs_midpts = []
+            conf_intervals = []
+
+            for i in range(len(pred_probs_space) - 1):
+                bin_filter = (y_proba > pred_probs_space[i]) & (
+                    y_proba < pred_probs_space[i + 1])
+
+                empirical_probs.append(y_true[bin_filter].mean())
+                pred_probs_midpts.append(pred_probs_space[i:i+2].mean())
+
+                if plot_ci:
+                    nsuccess = int(y_true[bin_filter].sum())
+                    nobs = len(y_true[bin_filter])
+                    ci = binomtest(nsuccess, nobs).proportion_ci()
+                    conf_intervals.append((ci[0], ci[1]))
+
+            conf_intervals = list(zip(*conf_intervals))
+
+            break
+        except Exception:
+            n_bins -= 1
+
+    if n_bins == 1:
+        return None
+
+    fig, ax = plt.subplots(figsize=figsize)
+    ax.plot(pred_probs_midpts, empirical_probs,
+            lw=2, marker="o", label="model")
+    if plot_ci:
+        ax.plot(pred_probs_midpts,
+                conf_intervals[0], lw=2, ls=":", c="lightgray", label=r"5%")
+        ax.plot(pred_probs_midpts,
+                conf_intervals[1], lw=2, ls=":", c="lightgray", label=r"95%")
+    ax.plot([np.min(y_proba), np.max(y_proba)],
+            [np.min(y_proba), np.max(y_proba)], ls="--", c="gray",
+            label="ideal")
+
+    ax.set_title("Reliability (calibration) curve")
+    ax.set_xlabel("Predicted probs")
+    ax.set_ylabel("Empirical probs")
 
     ax.legend()
     plt.tight_layout()
