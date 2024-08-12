@@ -9,8 +9,9 @@ import xgboost as xgb
 from loguru import logger
 
 from config.core import PROJECT_ROOT, config
-from utils import (get_last_run, get_run_by_id, load_versioned_data,
-                   log_sklearn_model, log_xgboost_model)
+from utils.logging import log_sklearn_model, log_xgboost_model
+from utils.processing import load_versioned_data
+from utils.runs import get_last_run, get_run_by_id
 
 
 warnings.filterwarnings("ignore")

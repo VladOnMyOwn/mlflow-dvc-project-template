@@ -11,7 +11,7 @@ from sklearn import datasets
 from sklearn.model_selection import train_test_split
 
 from config.core import PROJECT_ROOT, config
-from utils import create_data_version
+from utils.processing import create_data_version
 
 
 warnings.filterwarnings("ignore")

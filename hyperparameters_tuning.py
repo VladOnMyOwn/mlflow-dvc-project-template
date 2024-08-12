@@ -11,7 +11,8 @@ from loguru import logger
 from xgboost.callback import TrainingCallback
 
 from config.core import config
-from utils import get_last_run, get_run_by_id, load_versioned_data
+from utils.processing import load_versioned_data
+from utils.runs import get_last_run, get_run_by_id
 
 
 warnings.filterwarnings("ignore")
