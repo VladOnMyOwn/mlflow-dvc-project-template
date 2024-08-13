@@ -3,7 +3,7 @@ import subprocess
 import tempfile
 from io import StringIO
 from pathlib import Path
-from typing import List, Union
+from typing import List, Literal, Optional, Union
 from urllib.parse import unquote, urlparse
 
 import dvc.api
@@ -12,6 +12,49 @@ import pandas as pd
 from loguru._logger import Logger
 
 from mlproject.config.core import PROJECT_ROOT, config
+
+
+def load_data(
+    dataset_name: str,
+    file_format: Literal["csv", "xlsx", "frt", "parquet"],
+    logger: Logger,
+    subdir: Optional[str] = None,
+    log_usage: bool = False,
+    **log_usage_kwargs
+) -> pd.DataFrame:
+    """
+    Use mainly for initial data loading:
+    e.g. at the step of feature generation or data preprocessing,
+    without specifying target name
+    """
+
+    dataset_path = PROJECT_ROOT / config.project.local_datasets_dir
+    if subdir is not None:
+        dataset_path = dataset_path / subdir
+    dataset_path = dataset_path / f"{dataset_name}.{file_format}"
+
+    if file_format == "csv":
+        data = pd.read_csv(dataset_path)
+    elif file_format == "xlsx":
+        data = pd.read_excel(dataset_path)
+    elif file_format == "frt":
+        data = pd.read_feather(dataset_path)
+    elif file_format == "parquet":
+        data = pd.read_parquet(dataset_path)
+    else:
+        raise Exception(f"{file_format} file format is not supported")
+
+    logger.info(f"Dataset {dataset_name} loaded into memory")
+
+    if log_usage:
+        dataset = mlflow.data.from_pandas(
+            data,
+            name=dataset_name,
+            source=dataset_path
+        )
+        mlflow.log_input(dataset, context=log_usage_kwargs["context"])
+
+    return data
 
 
 def load_logged_data(
