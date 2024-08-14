@@ -44,13 +44,14 @@ def load_data(
     else:
         raise Exception(f"{file_format} file format is not supported")
 
-    logger.info(f"Dataset {dataset_name} loaded into memory")
+    logger.info(
+        f"Dataset {dataset_name} loaded into memory, shape: {data.shape}")
 
     if log_usage:
         dataset = mlflow.data.from_pandas(
             data,
             name=dataset_name,
-            source=dataset_path
+            source=dataset_path.as_uri()
         )
         mlflow.log_input(dataset, context=log_usage_kwargs["context"])
 
