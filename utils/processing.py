@@ -3,15 +3,33 @@ import subprocess
 import tempfile
 from io import StringIO
 from pathlib import Path
-from typing import List, Literal, Optional, Union
+from typing import Any, List, Literal, Optional, Tuple, Union
 from urllib.parse import unquote, urlparse
 
 import dvc.api
 import mlflow
 import pandas as pd
 from loguru._logger import Logger
+from sklearn.model_selection import train_test_split
 
 from mlproject.config.core import PROJECT_ROOT, config
+
+
+def get_train_test_split(
+    data: pd.DataFrame,
+    dt_threshold: Optional[str] = None,
+    test_size: float = 0.15
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
+
+    if dt_threshold is not None:
+        train = data[data[config.project.dt_col_name] < dt_threshold
+                     ].reset_index(drop=True)
+        test = data[data[config.project.dt_col_name] >= dt_threshold
+                    ].reset_index(drop=True)
+    else:
+        train, test = train_test_split(data, test_size=test_size)
+
+    return train, test
 
 
 def load_data(
@@ -27,6 +45,11 @@ def load_data(
     e.g. at the step of feature generation or data preprocessing,
     without specifying target name
     """
+
+    def fill_empty_columns(data: pd.DataFrame, value: Any = "") -> None:
+        for col in data.columns:
+            if data[col].dropna().empty:
+                data[col].fillna(value, inplace=True)
 
     dataset_path = PROJECT_ROOT / config.project.local_datasets_dir
     if subdir is not None:
@@ -48,6 +71,9 @@ def load_data(
         f"Dataset {dataset_name} loaded into memory, shape: {data.shape}")
 
     if log_usage:
+        # Fill empty columns so not to get infer schema warning
+        fill_empty_columns(data)
+
         dataset = mlflow.data.from_pandas(
             data,
             name=dataset_name,

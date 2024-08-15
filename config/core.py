@@ -23,6 +23,8 @@ class ProjectConfig(BaseModel):
     datasets_file_format: str
     dvc_remote_name: str
     local_datasets_dir: str
+    dt_col_name: Optional[str]
+    split_dt_thresh: Optional[str]
 
 
 class StorageConfig(BaseModel):

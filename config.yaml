@@ -6,6 +6,8 @@ test_dataset_name: test
 datasets_file_format: csv
 dvc_remote_name: s3_repo
 local_datasets_dir: data
+dt_col_name:
+split_dt_thresh:
 
 # Model related
 save_dir: models
