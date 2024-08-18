@@ -8,6 +8,7 @@ dvc_remote_name: s3_repo
 local_datasets_dir: data
 dt_col_name:
 split_dt_thresh:
+id_col_name:
 
 # Model related
 save_dir: models

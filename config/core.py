@@ -25,6 +25,7 @@ class ProjectConfig(BaseModel):
     local_datasets_dir: str
     dt_col_name: Optional[str]
     split_dt_thresh: Optional[str]
+    id_col_name: Optional[str]
 
 
 class StorageConfig(BaseModel):

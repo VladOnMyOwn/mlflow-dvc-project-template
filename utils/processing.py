@@ -88,6 +88,7 @@ def load_logged_data(
     run_id: str,
     tmp_path: Union[str, os.PathLike],
     dataset_name: str,
+    file_format: Literal["csv", "xlsx", "frt", "parquet"],
     logger: Logger,
     dst_dir: str = "datasets",
     log_usage: bool = False,
@@ -115,10 +116,19 @@ def load_logged_data(
         dataset_source.load(dst_path=os.path.join(tmpdir, dst_dir))
 
         # File name must match the dataset name
-        data = pd.read_csv(os.path.join(
+        dataset_path = os.path.join(
             tmpdir,
             f"{dst_dir}/{dataset_name}.{config.project.datasets_file_format}")
-        )
+        if file_format == "csv":
+            data = pd.read_csv(dataset_path)
+        elif file_format == "xlsx":
+            data = pd.read_excel(dataset_path)
+        elif file_format == "frt":
+            data = pd.read_feather(dataset_path)
+        elif file_format == "parquet":
+            data = pd.read_parquet(dataset_path)
+        else:
+            raise Exception(f"{file_format} file format is not supported")
 
     logger.info(f"Dataset {dataset_name} loaded into memory")
 
